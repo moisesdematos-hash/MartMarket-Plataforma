@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>MartMarket - Plataforma Global de Produtos Digitais & Criadores</title>
+    <meta name="description" content="Infraestrutura internacional para criação, venda, distribuição de produtos digitais, cursos, ebooks, área de membros e rede de afiliados." />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0F172A" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="MartMarket" />
+
+    <!-- Open Graph / SEO -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="MartMarket - Global Digital Creator Platform" />
+    <meta property="og:description" content="Venda cursos, ebooks, templates e crie sua área de membros com pagamentos multimoeda e afiliados." />
+    <meta property="og:image" content="/favicon.svg" />
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white min-h-screen">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration error:', err));
+        });
+      }
+    </script>
+  </body>
+</html>

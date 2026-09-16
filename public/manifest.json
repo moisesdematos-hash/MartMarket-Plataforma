@@ -1,0 +1,17 @@
+{
+  "name": "MartMarket - Global Digital Creator Platform & Marketplace",
+  "short_name": "MartMarket",
+  "description": "Plataforma internacional de economia digital, cursos, ebooks, área de membros e checkout modular.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090D16",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
