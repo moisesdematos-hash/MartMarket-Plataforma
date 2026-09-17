@@ -161,14 +161,31 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
             </div>
           </div>
 
-          {/* Cover & Video Banner */}
-          <div className="rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl relative">
-            <img
-              src={product.bannerImage || product.coverImage}
-              alt={product.title}
-              className="w-full h-72 sm:h-96 object-cover"
-            />
-          </div>
+          {/* Cover & Video Banner - Smart Layout based on Product Type */}
+          {product.productType === 'ebook' ? (
+            <div className="flex justify-center bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl border border-slate-800 shadow-2xl p-8">
+              <img
+                src={product.coverImage || product.bannerImage}
+                alt={product.title}
+                className="w-auto max-h-[500px] object-contain rounded-lg shadow-2xl transform hover:scale-105 transition-transform duration-500 border border-slate-700"
+              />
+            </div>
+          ) : (
+            <div className="rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl relative group">
+              <img
+                src={product.bannerImage || product.coverImage}
+                alt={product.title}
+                className="w-full h-72 sm:h-96 object-cover"
+              />
+              {product.productType === 'course' && (
+                <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/40 transition-colors flex items-center justify-center">
+                  <button className="w-16 h-16 rounded-full bg-blue-600/90 text-white flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:scale-110 hover:bg-blue-500 transition-all backdrop-blur-sm cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Full Description */}
           <div className="space-y-4">

@@ -312,6 +312,13 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ onNavigate }
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
+                          onClick={() => onNavigate('creator-wizard', { productId: prod.id })}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                          title="Editar Produto"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => onNavigate('product-details', { slug: prod.slug })}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
                           title="Visualizar Página Pública"

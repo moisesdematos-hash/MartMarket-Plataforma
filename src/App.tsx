@@ -171,7 +171,7 @@ export function App() {
             ) : (
               <>
                 {currentView === 'creator' && <CreatorDashboard onNavigate={navigate} />}
-                {currentView === 'creator-wizard' && <ProductCreationWizard onNavigate={navigate} />}
+                {currentView === 'creator-wizard' && <ProductCreationWizard onNavigate={navigate} productId={routeParams.productId} />}
                 {currentView === 'members' && <MembersLibrary onNavigate={navigate} />}
                 {currentView === 'affiliates' && <AffiliateHub onNavigate={navigate} />}
                 {currentView === 'wallet' && <WalletDashboard />}

@@ -2,7 +2,7 @@
 // MARTMARKET 9-STEP PRODUCT CREATION WIZARD
 // ==============================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -32,10 +32,11 @@ import { AICopyResult, AICurriculumModule } from '../../services/ai/aiCopilot';
 
 interface ProductCreationWizardProps {
   onNavigate: (view: string, params?: Record<string, any>) => void;
+  productId?: string;
 }
 
-export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ onNavigate }) => {
-  const { addProduct, categories } = useMarketplace();
+export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ onNavigate, productId }) => {
+  const { addProduct, updateProduct, getProductById, categories } = useMarketplace();
   const { t, formatMoney } = useI18n();
   const { user } = useAuth();
   const { showToast } = useNotification();
@@ -67,6 +68,31 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
   // Affiliate
   const [affiliateEnabled, setAffiliateEnabled] = useState(true);
   const [affiliateCommissionRate, setAffiliateCommissionRate] = useState<number>(40);
+
+  useEffect(() => {
+    if (productId) {
+      const p = getProductById(productId);
+      if (p) {
+        setTitle(p.title);
+        setSlug(p.slug);
+        setShortDescription(p.shortDescription || '');
+        setDescription(p.description || '');
+        setCategoryId(p.categoryId || categories[0]?.id);
+        setProductType(p.productType);
+        setCoverImage(p.coverImage || '');
+        setBannerImage(p.bannerImage || '');
+        setDefaultPrice(p.defaultPrice);
+        setCurrency(p.currency);
+        setRefundDays(p.refundDays || 7);
+        setBumpEnabled(p.bumpEnabled || false);
+        setBumpTitle(p.bumpTitle || '');
+        setBumpDescription(p.bumpDescription || '');
+        setBumpPrice(p.bumpPrice || 0);
+        setAffiliateEnabled(p.affiliateEnabled || false);
+        setAffiliateCommissionRate(p.affiliateCommissionRate || 40);
+      }
+    }
+  }, [productId, getProductById, categories]);
 
   // Course modules (if course)
   const [modules, setModules] = useState([
@@ -125,7 +151,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
   const handlePublish = () => {
     const selectedCategoryObj = categories.find((c) => c.id === categoryId);
 
-    const newProd = addProduct({
+    const productPayload = {
       creatorId: user ? user.id : 'usr-creator-1',
       creatorName: user ? user.fullName : 'Kelson Manuel',
       creatorAvatar: user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
@@ -138,18 +164,20 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
       productType,
       coverImage,
       bannerImage,
-      status: 'published',
+      status: 'published' as const,
       isPublished: true,
       defaultPrice,
       currency,
       refundDays,
       affiliateEnabled,
       affiliateCommissionRate,
-      affiliateApprovalType: 'instant',
+      affiliateApprovalType: 'instant' as const,
       bumpEnabled,
       bumpTitle: bumpEnabled ? bumpTitle : undefined,
       bumpDescription: bumpEnabled ? bumpDescription : undefined,
       bumpPrice: bumpEnabled ? bumpPrice : undefined,
+      isSponsored: false,
+      features: ['Acesso vitalício', 'Certificado de Conclusão'],
       course: productType === 'course' ? {
         id: `crs_${Date.now()}`,
         productId: '',
@@ -169,15 +197,22 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
             title: l.title,
             videoUrl: l.videoUrl,
             durationSeconds: l.durationSeconds,
-            isFreePreview: l.isFreePreview,
+            isFreePreview: lIdx === 0,
             sortOrder: lIdx + 1
           }))
         }))
       } : undefined
-    });
+    };
 
-    showToast('success', 'Produto criado e publicado com sucesso!');
-    onNavigate('product-details', { slug: newProd.slug });
+    if (productId) {
+      updateProduct(productId, productPayload);
+      showToast('success', 'Produto atualizado com sucesso!');
+      onNavigate('product-details', { slug: productPayload.slug });
+    } else {
+      const newProd = addProduct(productPayload as any);
+      showToast('success', 'Produto criado e publicado com sucesso!');
+      onNavigate('product-details', { slug: newProd.slug });
+    }
   };
 
   return (
