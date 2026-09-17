@@ -15,8 +15,7 @@ import {
   AffiliateLink,
   ProductReview,
   LessonProgress,
-  SupportedCurrency,
-  PaymentInitiationResult
+  SupportedCurrency
 } from '../types';
 import { supabase } from '../lib/supabase';
 import { 
@@ -124,12 +123,16 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
             isPublished: dbProd.is_published,
             isSponsored: dbProd.is_sponsored,
             status: dbProd.status,
+            categoryId: 'cat-1',
+            categorySlug: 'desenvolvimento',
+            refundDays: 7,
+            affiliateApprovalType: 'instant',
             bumpEnabled: false,
             affiliateEnabled: dbProd.affiliate_commission_rate > 0,
             affiliateCommissionRate: dbProd.affiliate_commission_rate,
             features: [],
             createdAt: dbProd.created_at,
-          })) as Product[];
+          })) as unknown as Product[];
           
           setProducts(prev => {
             // merge supabase data with local mock data (for UI completeness)
