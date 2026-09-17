@@ -93,12 +93,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   const navLinks = [
-    { id: 'marketplace', label: t('marketplace'), icon: ShoppingBag },
-    { id: 'creator', label: t('creatorTitle'), icon: Sparkles },
-    { id: 'members', label: t('membersArea'), icon: BookOpen },
-    { id: 'affiliates', label: t('affiliates'), icon: Users },
-    { id: 'wallet', label: t('wallet'), icon: Wallet },
-    { id: 'admin', label: t('admin'), icon: Shield },
+    { id: 'marketplace', label: t('marketplace'), icon: ShoppingBag }
   ];
 
   return (
@@ -172,14 +167,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Action Icons & Controls */}
         <div className="flex items-center gap-2">
-          
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('open-ai-copilot'))}
-            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>IA Copilot</span>
-          </button>
 
           {/* Currency Dropdown */}
           <div className="relative" ref={currRef}>
