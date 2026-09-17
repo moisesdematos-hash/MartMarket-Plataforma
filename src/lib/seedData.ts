@@ -147,6 +147,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     affiliateEnabled: true,
     affiliateCommissionRate: 40,
     affiliateApprovalType: 'instant',
+    isSponsored: true,
     bumpEnabled: true,
     bumpTitle: 'Kit Completo de Boilerplates & Arquitetura Starter',
     bumpDescription: 'Receba templates prontos com autenticação, PostgreSQL e banco configurados para economizar 100 horas.',

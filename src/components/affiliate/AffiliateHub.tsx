@@ -21,6 +21,25 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
+
+const chartData = [
+  { name: 'Seg', clicks: 120, conversions: 12 },
+  { name: 'Ter', clicks: 180, conversions: 19 },
+  { name: 'Qua', clicks: 150, conversions: 15 },
+  { name: 'Qui', clicks: 220, conversions: 25 },
+  { name: 'Sex', clicks: 310, conversions: 35 },
+  { name: 'Sáb', clicks: 450, conversions: 50 },
+  { name: 'Dom', clicks: 390, conversions: 42 },
+];
 
 interface AffiliateHubProps {
   onNavigate: (view: string, params?: Record<string, any>) => void;
@@ -118,6 +137,39 @@ export const AffiliateHub: React.FC<AffiliateHubProps> = ({ onNavigate }) => {
           <div className="text-[11px] text-slate-400">
             Rastreados via cookies de longa duração
           </div>
+        </div>
+      </div>
+
+      {/* Advanced Tracking Chart */}
+      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-6 shadow-xl">
+        <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-indigo-400" />
+          Gráfico de Rastreio (Conversões vs Cliques)
+        </h3>
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#38bdf8" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorConversions" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#818cf8" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+              <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+              <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', fontSize: '12px' }}
+                itemStyle={{ color: '#e2e8f0' }}
+              />
+              <Area type="monotone" dataKey="clicks" stroke="#38bdf8" strokeWidth={2} fillOpacity={1} fill="url(#colorClicks)" />
+              <Area type="monotone" dataKey="conversions" stroke="#818cf8" strokeWidth={2} fillOpacity={1} fill="url(#colorConversions)" />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

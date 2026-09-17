@@ -135,14 +135,14 @@ export const WalletDashboard: React.FC = () => {
       </div>
 
       {/* Balance Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
         
         {/* Available Balance */}
         <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-900/30 via-slate-900 to-slate-900 border border-blue-500/30 space-y-2">
           <span className="text-xs font-semibold text-slate-400 block">
             {t('availableBalance')}
           </span>
-          <div className="text-3xl font-extrabold text-emerald-400 font-mono">
+          <div className="text-2xl lg:text-3xl font-extrabold text-emerald-400 font-mono truncate">
             {formatMoney(wallet.availableBalance, currency)}
           </div>
           <span className="text-[11px] text-slate-400 block pt-1">
@@ -155,11 +155,11 @@ export const WalletDashboard: React.FC = () => {
           <span className="text-xs font-semibold text-slate-400 block">
             {t('pendingBalance')}
           </span>
-          <div className="text-3xl font-extrabold text-amber-400 font-mono">
+          <div className="text-2xl lg:text-3xl font-extrabold text-amber-400 font-mono truncate">
             {formatMoney(wallet.pendingBalance, currency)}
           </div>
           <span className="text-[11px] text-slate-400 block pt-1">
-            Em período de garantia incondicional (7 a 14 dias)
+            Garantia (7 a 14 dias)
           </span>
         </div>
 
@@ -168,11 +168,29 @@ export const WalletDashboard: React.FC = () => {
           <span className="text-xs font-semibold text-slate-400 block">
             {t('totalWithdrawn')}
           </span>
-          <div className="text-3xl font-extrabold text-white font-mono">
+          <div className="text-2xl lg:text-3xl font-extrabold text-white font-mono truncate">
             {formatMoney(wallet.totalWithdrawn, currency)}
           </div>
           <span className="text-[11px] text-slate-400 block pt-1">
-            Liquidado com sucesso para IBAN cadastrado
+            Liquidado com sucesso
+          </span>
+        </div>
+
+        {/* AGT Tax Estimator */}
+        <div className="p-6 rounded-3xl bg-rose-950/20 border border-rose-500/20 space-y-2 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="sm" className="h-6 text-[10px] bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 px-2" onClick={() => showToast('info', 'O Relatório Anual do Imposto Industrial estará disponível aqui no final do exercício económico.')}>
+              Baixar Relatório
+            </Button>
+          </div>
+          <span className="text-xs font-semibold text-rose-400/80 block">
+            Imposto Estimado (AGT)
+          </span>
+          <div className="text-2xl lg:text-3xl font-extrabold text-rose-400 font-mono truncate">
+            {formatMoney((wallet.availableBalance + wallet.pendingBalance + wallet.totalWithdrawn) * 0.065, currency)}
+          </div>
+          <span className="text-[11px] text-slate-400 block pt-1">
+            6.5% - Regime Simplificado do Imposto Industrial
           </span>
         </div>
       </div>

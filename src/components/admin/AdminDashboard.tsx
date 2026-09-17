@@ -144,28 +144,31 @@ export const AdminDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* TAB 1: OVERVIEW & ORDERS */}
+      {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
-        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-xl">
-          <h3 className="text-base font-bold text-slate-100">Transações e Pedidos Globais</h3>
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
+          <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-indigo-400" />
+            Últimas Transações Globais
+          </h3>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] tracking-wider border-b border-slate-800">
-                <tr>
-                  <th className="py-3 px-4">Ordem</th>
-                  <th className="py-3 px-4">Cliente</th>
-                  <th className="py-3 px-4">Produto</th>
-                  <th className="py-3 px-4">Método</th>
-                  <th className="py-3 px-4">Taxa Plataforma</th>
-                  <th className="py-3 px-4 text-right">Total</th>
-                  <th className="py-3 px-4">Status</th>
+            <table className="w-full text-left text-xs whitespace-nowrap">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400">
+                  <th className="pb-3 px-4 font-semibold">Data</th>
+                  <th className="pb-3 px-4 font-semibold">Comprador</th>
+                  <th className="pb-3 px-4 font-semibold">Produto</th>
+                  <th className="pb-3 px-4 font-semibold">Método</th>
+                  <th className="pb-3 px-4 font-semibold">Take-rate</th>
+                  <th className="pb-3 px-4 font-semibold text-right">Total Liquidez</th>
+                  <th className="pb-3 px-4 font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {orders.map((o) => (
                   <tr key={o.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-blue-400">
-                      #{o.orderNumber}
+                    <td className="py-3.5 px-4 text-slate-300">
+                      {new Date(o.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-slate-100">{o.buyerName}</div>
@@ -198,7 +201,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* TAB 2: PRODUCT MODERATION */}
       {activeTab === 'products' && (
-        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-xl">
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
           <h3 className="text-base font-bold text-slate-100">{t('productModeration')}</h3>
           <div className="divide-y divide-slate-800/60">
             {products.map((p) => (
@@ -211,7 +214,7 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={p.isPublished ? 'success' : 'neutral'} size="sm">
                     {p.isPublished ? 'Publicado' : 'Suspenso'}
                   </Badge>
@@ -220,6 +223,7 @@ export const AdminDashboard: React.FC = () => {
                     <Button
                       variant="danger"
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={() => handleSuspendProduct(p.id)}
                     >
                       Suspender
@@ -228,6 +232,7 @@ export const AdminDashboard: React.FC = () => {
                     <Button
                       variant="success"
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={() => handleApproveProduct(p.id)}
                     >
                       Aprovar & Publicar
@@ -242,7 +247,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* TAB 3: WITHDRAWALS QUEUE */}
       {activeTab === 'withdrawals' && (
-        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-xl">
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
           <h3 className="text-base font-bold text-slate-100">Fila de Liquidação Bancária</h3>
           {withdrawals.length === 0 ? (
             <p className="text-xs text-slate-400">Sem pedidos de levantamento registados.</p>
@@ -255,13 +260,13 @@ export const AdminDashboard: React.FC = () => {
                 >
                   <div>
                     <div className="font-bold text-slate-100">{w.userName}</div>
-                    <div className="text-slate-400">{w.payoutDetails}</div>
+                    <div className="text-slate-400 break-all">{w.payoutDetails}</div>
                     <div className="font-mono text-emerald-400 font-bold mt-1">
                       {formatMoney(w.amount, w.currency)}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <Badge variant={w.status === 'paid' ? 'success' : 'warning'} size="sm">
                       {w.status.toUpperCase()}
                     </Badge>
@@ -269,6 +274,7 @@ export const AdminDashboard: React.FC = () => {
                       <Button
                         variant="primary"
                         size="sm"
+                        className="w-full sm:w-auto"
                         onClick={() => handleApprovePayout(w.id)}
                       >
                         {t('approveWithdrawal')}
@@ -284,7 +290,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* TAB 4: AUDIT LOGS */}
       {activeTab === 'audit' && (
-        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-xl text-xs text-slate-300">
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl text-xs text-slate-300">
           <h3 className="text-base font-bold text-slate-100">{t('auditLogs')}</h3>
           <div className="space-y-2">
             {[

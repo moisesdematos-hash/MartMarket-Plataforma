@@ -372,51 +372,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {products.slice(0, 3).map((product) => (
-              <div
-                key={product.id}
-                onClick={() => onNavigate('product-details', { slug: product.slug })}
-                className="group rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden hover:border-slate-700 transition-all cursor-pointer flex flex-col shadow-lg"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={product.coverImage}
-                    alt={product.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 left-3">
-                    <Badge variant="primary" size="sm">
-                      {product.productType.toUpperCase()}
-                    </Badge>
+            {products.slice(0, 3).map((product) => {
+              const isPatrocinado = product.isSponsored;
+              return (
+                <div
+                  key={product.id}
+                  onClick={() => onNavigate('product-details', { slug: product.slug })}
+                  className={`group rounded-2xl overflow-hidden transition-all cursor-pointer flex flex-col justify-between shadow-lg relative ${
+                    isPatrocinado
+                      ? 'bg-amber-950/10 border-2 border-amber-500/30 hover:border-amber-400/60 hover:shadow-xl hover:shadow-amber-500/10'
+                      : 'bg-slate-900 border border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  {isPatrocinado && (
+                    <div className="absolute top-0 right-0 bg-amber-500 text-amber-950 text-[10px] font-black uppercase px-2 py-1 rounded-bl-lg z-10 shadow-lg shadow-amber-500/20">
+                      Patrocinado
+                    </div>
+                  )}
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={product.coverImage}
+                      alt={product.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-3 left-3">
+                      <Badge variant="primary" size="sm">
+                        {product.productType.toUpperCase()}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h4 className="font-bold text-base text-slate-100 line-clamp-2 group-hover:text-blue-400 transition-colors">
-                      {product.title}
-                    </h4>
-                    <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">
-                      {product.shortDescription}
-                    </p>
-                  </div>
-
-                  <div className="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between">
+                  <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider block">
-                        Por apenas
-                      </span>
-                      <span className="text-base font-extrabold text-white font-mono">
+                      <h4 className={`font-bold text-base line-clamp-2 transition-colors ${
+                        isPatrocinado ? 'text-amber-100 group-hover:text-amber-400' : 'text-slate-100 group-hover:text-blue-400'
+                      }`}>
+                        {product.title}
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">
+                        {product.shortDescription}
+                      </p>
+                    </div>
+
+                    <div className={`mt-4 pt-4 border-t flex items-center justify-between ${
+                      isPatrocinado ? 'border-amber-500/20' : 'border-slate-800/50'
+                    }`}>
+                      <span className="text-lg font-extrabold text-white font-mono">
                         {formatMoney(product.defaultPrice, product.currency)}
                       </span>
+                      <Button variant={isPatrocinado ? 'warning' : 'primary'} size="sm">
+                        Comprar &rarr;
+                      </Button>
                     </div>
-                    <span className="text-xs font-semibold text-blue-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                      Ver detalhes &rarr;
-                    </span>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

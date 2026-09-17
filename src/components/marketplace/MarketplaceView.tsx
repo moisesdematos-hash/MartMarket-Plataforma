@@ -59,6 +59,9 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
     return b.totalSales - a.totalSales; // popular default
   });
 
+  const sponsoredProducts = sortedProducts.filter(p => p.isSponsored);
+  const organicProducts = sortedProducts.filter(p => !p.isSponsored);
+
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
       case 'Briefcase': return <Briefcase className="w-4 h-4" />;
@@ -69,6 +72,95 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
       default: return <BookOpen className="w-4 h-4" />;
     }
   };
+
+  const renderProductCard = (product: any, isPatrocinado: boolean = false) => (
+    <div
+      key={product.id}
+      onClick={() => onNavigate('product-details', { slug: product.slug })}
+      className={`group rounded-2xl overflow-hidden transition-all cursor-pointer flex flex-col justify-between relative ${
+        isPatrocinado 
+          ? 'bg-amber-950/10 border-2 border-amber-500/30 hover:border-amber-400/60 hover:shadow-xl hover:shadow-amber-500/10'
+          : 'bg-slate-900 border border-slate-800 hover:border-slate-700 hover:shadow-xl hover:shadow-blue-500/5'
+      }`}
+    >
+      {isPatrocinado && (
+        <div className="absolute top-0 right-0 bg-amber-500 text-amber-950 text-[10px] font-black uppercase px-2 py-1 rounded-bl-lg z-10 shadow-lg shadow-amber-500/20">
+          Patrocinado
+        </div>
+      )}
+      <div>
+        {/* Cover Image */}
+        <div className="relative h-44 overflow-hidden bg-slate-950">
+          <img
+            src={product.coverImage}
+            alt={product.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          <div className="absolute top-3 left-3">
+            <Badge variant="primary" size="sm">
+              {product.productType.toUpperCase()}
+            </Badge>
+          </div>
+          {product.bumpEnabled && !isPatrocinado && (
+            <div className="absolute top-3 right-3">
+              <Badge variant="warning" size="sm">
+                BUMP OFERTA
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-2">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <img
+              src={product.creatorAvatar}
+              alt={product.creatorName}
+              className="w-4 h-4 rounded-full object-cover"
+            />
+            <span className="truncate">{product.creatorName}</span>
+          </div>
+
+          <h4 className={`font-bold text-sm line-clamp-2 transition-colors leading-snug ${isPatrocinado ? 'text-amber-100 group-hover:text-amber-400' : 'text-slate-100 group-hover:text-blue-400'}`}>
+            {product.title}
+          </h4>
+
+          <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+            {product.shortDescription}
+          </p>
+        </div>
+      </div>
+
+      {/* Footer Stats & Price */}
+      <div className="p-4 pt-0">
+        <div className="flex items-center gap-1.5 text-xs text-amber-400 mb-3">
+          <div className="flex">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`w-3.5 h-3.5 ${
+                  i < Math.floor(product.rating) ? 'fill-amber-400' : 'text-slate-600'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="font-bold text-slate-200">{product.rating}</span>
+          <span className="text-slate-500">({product.reviewCount})</span>
+        </div>
+
+        <div className={`pt-3 border-t flex items-center justify-between ${isPatrocinado ? 'border-amber-500/20' : 'border-slate-800/80'}`}>
+          <div>
+            <span className="text-base font-extrabold text-white font-mono">
+              {formatMoney(product.defaultPrice, product.currency)}
+            </span>
+          </div>
+          <Button variant={isPatrocinado ? 'warning' : 'primary'} size="sm">
+            Comprar &rarr;
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -251,86 +343,29 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {sortedProducts.map((product) => (
-                <div
-                  key={product.id}
-                  onClick={() => onNavigate('product-details', { slug: product.slug })}
-                  className="group rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden hover:border-slate-700 hover:shadow-xl hover:shadow-blue-500/5 transition-all cursor-pointer flex flex-col justify-between"
-                >
-                  <div>
-                    {/* Cover Image */}
-                    <div className="relative h-44 overflow-hidden bg-slate-950">
-                      <img
-                        src={product.coverImage}
-                        alt={product.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-3 left-3">
-                        <Badge variant="primary" size="sm">
-                          {product.productType.toUpperCase()}
-                        </Badge>
-                      </div>
-                      {product.bumpEnabled && (
-                        <div className="absolute top-3 right-3">
-                          <Badge variant="warning" size="sm">
-                            BUMP OFERTA
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <img
-                          src={product.creatorAvatar}
-                          alt={product.creatorName}
-                          className="w-4 h-4 rounded-full object-cover"
-                        />
-                        <span className="truncate">{product.creatorName}</span>
-                      </div>
-
-                      <h4 className="font-bold text-sm text-slate-100 line-clamp-2 group-hover:text-blue-400 transition-colors leading-snug">
-                        {product.title}
-                      </h4>
-
-                      <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                        {product.shortDescription}
-                      </p>
-                    </div>
+            <div className="space-y-10">
+              {/* Sponsored Section */}
+              {sponsoredProducts.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-amber-400 text-sm font-bold">
+                    <Sparkles className="w-5 h-5" />
+                    <span>Destaques Patrocinados</span>
                   </div>
-
-                  {/* Footer Stats & Price */}
-                  <div className="p-4 pt-0">
-                    <div className="flex items-center gap-1.5 text-xs text-amber-400 mb-3">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3.5 h-3.5 ${
-                              i < Math.floor(product.rating) ? 'fill-amber-400' : 'text-slate-600'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="font-bold text-slate-200">{product.rating}</span>
-                      <span className="text-slate-500">({product.reviewCount})</span>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                      <div>
-                        <span className="text-base font-extrabold text-white font-mono">
-                          {formatMoney(product.defaultPrice, product.currency)}
-                        </span>
-                      </div>
-                      <Button variant="primary" size="sm">
-                        Comprar &rarr;
-                      </Button>
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {sponsoredProducts.map(p => renderProductCard(p, true))}
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Organic Section */}
+              <div className="space-y-4">
+                {sponsoredProducts.length > 0 && (
+                  <h3 className="text-sm font-bold text-slate-300">Explorar Catálogo</h3>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {organicProducts.map(p => renderProductCard(p, false))}
+                </div>
+              </div>
             </div>
           )}
         </div>

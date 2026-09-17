@@ -159,6 +159,7 @@ export interface Product {
   affiliateEnabled: boolean;
   affiliateCommissionRate: number; // e.g. 40 (%)
   affiliateApprovalType: 'instant' | 'manual';
+  isSponsored?: boolean;
   
   // Order Bump configuration
   bumpEnabled: boolean;

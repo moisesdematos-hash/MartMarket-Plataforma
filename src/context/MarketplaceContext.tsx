@@ -15,8 +15,10 @@ import {
   AffiliateLink,
   ProductReview,
   LessonProgress,
-  SupportedCurrency
+  SupportedCurrency,
+  PaymentInitiationResult
 } from '../types';
+import { supabase } from '../lib/supabase';
 import { 
   INITIAL_CATEGORIES, 
   INITIAL_PRODUCTS, 
@@ -80,8 +82,69 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Products
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('martmarket_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    let loaded = saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    loaded = loaded.map((p: Product) => 
+      p.id === 'prod-react-fullstack' ? { ...p, isSponsored: true } : p
+    );
+    return loaded;
   });
+
+  useEffect(() => {
+    // Initial sync of mock products (force sponsored flag)
+    setProducts(prev => {
+      const needsUpdate = prev.some(p => p.id === 'prod-react-fullstack' && !p.isSponsored);
+      if (needsUpdate) {
+        return prev.map(p => p.id === 'prod-react-fullstack' ? { ...p, isSponsored: true } : p);
+      }
+      return prev;
+    });
+
+    // Fetch real products from Supabase
+    const fetchRealProducts = async () => {
+      try {
+        const { data, error } = await supabase.from('products').select('*');
+        if (!error && data && data.length > 0) {
+          // Map snake_case from DB to camelCase for UI
+          const mappedProducts = data.map(dbProd => ({
+            id: dbProd.id,
+            slug: dbProd.slug,
+            title: dbProd.title,
+            shortDescription: dbProd.short_description,
+            description: dbProd.short_description, // mock
+            coverImage: dbProd.cover_image,
+            productType: dbProd.product_type,
+            creatorId: dbProd.creator_id,
+            creatorName: 'Real Creator', // would need join
+            creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator',
+            defaultPrice: dbProd.default_price,
+            currency: dbProd.currency,
+            rating: 5.0,
+            reviewCount: 0,
+            totalSales: 0,
+            isPublished: dbProd.is_published,
+            isSponsored: dbProd.is_sponsored,
+            status: dbProd.status,
+            bumpEnabled: false,
+            affiliateEnabled: dbProd.affiliate_commission_rate > 0,
+            affiliateCommissionRate: dbProd.affiliate_commission_rate,
+            features: [],
+            createdAt: dbProd.created_at,
+          })) as Product[];
+          
+          setProducts(prev => {
+            // merge supabase data with local mock data (for UI completeness)
+            const supabaseIds = new Set(mappedProducts.map(p => p.id));
+            const filteredLocal = prev.filter(p => !supabaseIds.has(p.id));
+            return [...mappedProducts, ...filteredLocal];
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching from supabase:', err);
+      }
+    };
+    
+    fetchRealProducts();
+  }, []);
 
   const [categories] = useState<ProductCategory[]>(INITIAL_CATEGORIES);
 
@@ -301,14 +364,47 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       createdAt: new Date().toISOString()
     };
 
+    // Optimistic UI update
     setProducts((prev) => [newProduct, ...prev]);
+
+    // Fire and forget to Supabase (Background Sync)
+    supabase.from('products').insert([{
+      slug: newProduct.slug,
+      title: newProduct.title,
+      short_description: newProduct.shortDescription,
+      cover_image: newProduct.coverImage,
+      product_type: newProduct.productType,
+      creator_id: newProduct.creatorId,
+      default_price: newProduct.defaultPrice,
+      currency: newProduct.currency,
+      is_published: newProduct.isPublished,
+      is_sponsored: newProduct.isSponsored,
+      status: newProduct.status,
+      affiliate_commission_rate: newProduct.affiliateCommissionRate || 0,
+    }]).then(({ error }) => {
+      if (error) console.error("Failed to sync new product to Supabase:", error);
+    });
+
     return newProduct;
   };
 
   const updateProduct = (id: string, updates: Partial<Product>) => {
+    // Optimistic UI update
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p))
     );
+
+    // Background Sync
+    const dbUpdates: any = {};
+    if (updates.isPublished !== undefined) dbUpdates.is_published = updates.isPublished;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.isSponsored !== undefined) dbUpdates.is_sponsored = updates.isSponsored;
+
+    if (Object.keys(dbUpdates).length > 0) {
+      supabase.from('products').update(dbUpdates).eq('id', id).then(({ error }) => {
+        if (error) console.error("Failed to sync update to Supabase:", error);
+      });
+    }
   };
 
   const deleteProduct = (id: string) => {

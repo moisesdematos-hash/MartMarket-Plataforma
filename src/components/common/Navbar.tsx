@@ -404,6 +404,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span>{t('wallet')}</span>
                   </button>
 
+                  {user?.role === 'SUPER_ADMIN' && (
+                    <button
+                      onClick={() => {
+                        onNavigate('admin');
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer text-left"
+                    >
+                      <Shield className="w-3.5 h-3.5 text-rose-400" />
+                      <span>{t('admin')}</span>
+                    </button>
+                  )}
+
                   <div className="my-1 border-t border-slate-800" />
 
                   <button
