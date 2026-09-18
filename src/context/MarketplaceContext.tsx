@@ -370,23 +370,30 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Optimistic UI update
     setProducts((prev) => [newProduct, ...prev]);
 
-    // Fire and forget to Supabase (Background Sync)
-    supabase.from('products').insert([{
-      slug: newProduct.slug,
-      title: newProduct.title,
-      short_description: newProduct.shortDescription,
-      cover_image: newProduct.coverImage,
-      product_type: newProduct.productType,
-      creator_id: newProduct.creatorId,
-      default_price: newProduct.defaultPrice,
-      currency: newProduct.currency,
-      is_published: newProduct.isPublished,
-      is_sponsored: newProduct.isSponsored,
-      status: newProduct.status,
-      affiliate_commission_rate: newProduct.affiliateCommissionRate || 0,
-    }]).then(({ error }) => {
-      if (error) console.error("Failed to sync new product to Supabase:", error);
-    });
+      // Fire and forget to Supabase (Background Sync)
+      supabase.from('products').insert([{
+        id: newProduct.id,
+        slug: newProduct.slug,
+        title: newProduct.title,
+        short_description: newProduct.shortDescription || '',
+        description: newProduct.description || '',
+        cover_image: newProduct.coverImage,
+        banner_image: newProduct.bannerImage,
+        type: newProduct.productType,
+        creator_id: newProduct.creatorId,
+        category_id: newProduct.categoryId,
+        default_price: newProduct.defaultPrice,
+        currency: newProduct.currency,
+        is_published: newProduct.isPublished || true,
+        affiliate_enabled: newProduct.affiliateEnabled || false,
+        affiliate_commission_rate: newProduct.affiliateCommissionRate || 0,
+        refund_days: newProduct.refundDays || 7,
+        webhook_url: newProduct.webhookUrl || null,
+        download_url: newProduct.downloadUrl || null,
+        features: newProduct.features || []
+      }]).then(({ error }) => {
+        if (error) console.error("Failed to sync new product to Supabase:", error);
+      });
 
     return newProduct;
   };
@@ -397,17 +404,31 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       prev.map((p) => (p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p))
     );
 
-    // Background Sync
-    const dbUpdates: any = {};
-    if (updates.isPublished !== undefined) dbUpdates.is_published = updates.isPublished;
-    if (updates.status !== undefined) dbUpdates.status = updates.status;
-    if (updates.isSponsored !== undefined) dbUpdates.is_sponsored = updates.isSponsored;
+      // Background Sync
+      const dbUpdates: any = {};
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.slug !== undefined) dbUpdates.slug = updates.slug;
+      if (updates.shortDescription !== undefined) dbUpdates.short_description = updates.shortDescription;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.coverImage !== undefined) dbUpdates.cover_image = updates.coverImage;
+      if (updates.bannerImage !== undefined) dbUpdates.banner_image = updates.bannerImage;
+      if (updates.productType !== undefined) dbUpdates.type = updates.productType;
+      if (updates.categoryId !== undefined) dbUpdates.category_id = updates.categoryId;
+      if (updates.defaultPrice !== undefined) dbUpdates.default_price = updates.defaultPrice;
+      if (updates.currency !== undefined) dbUpdates.currency = updates.currency;
+      if (updates.isPublished !== undefined) dbUpdates.is_published = updates.isPublished;
+      if (updates.affiliateEnabled !== undefined) dbUpdates.affiliate_enabled = updates.affiliateEnabled;
+      if (updates.affiliateCommissionRate !== undefined) dbUpdates.affiliate_commission_rate = updates.affiliateCommissionRate;
+      if (updates.refundDays !== undefined) dbUpdates.refund_days = updates.refundDays;
+      if (updates.webhookUrl !== undefined) dbUpdates.webhook_url = updates.webhookUrl;
+      if (updates.downloadUrl !== undefined) dbUpdates.download_url = updates.downloadUrl;
+      if (updates.features !== undefined) dbUpdates.features = updates.features;
 
-    if (Object.keys(dbUpdates).length > 0) {
-      supabase.from('products').update(dbUpdates).eq('id', id).then(({ error }) => {
-        if (error) console.error("Failed to sync update to Supabase:", error);
-      });
-    }
+      if (Object.keys(dbUpdates).length > 0) {
+        supabase.from('products').update(dbUpdates).eq('id', id).then(({ error }) => {
+          if (error) console.error("Failed to sync update to Supabase:", error);
+        });
+      }
   };
 
   const deleteProduct = (id: string) => {

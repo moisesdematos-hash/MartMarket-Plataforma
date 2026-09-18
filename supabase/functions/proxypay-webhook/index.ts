@@ -57,40 +57,29 @@ serve(async (req) => {
 
     const order = updatedOrders[0];
 
-    // 3. Processar Dinheiro na Carteira do Criador
+    // 3. Processar Dinheiro na Carteira do Criador (Ledger-based)
     // Taxa da plataforma: Ex: 5%
     const platformFeePercentage = 0.05;
-    const platformFee = order.total_amount * platformFeePercentage;
-    const creatorEarnings = order.total_amount - platformFee;
+    const platformFee = order.amount_total * platformFeePercentage;
+    const creatorEarnings = order.amount_total - platformFee;
 
-    // Obter carteira atual
-    const { data: wallet, error: walletError } = await supabase
-      .from('wallets')
-      .select('*')
-      .eq('user_id', order.creator_id)
-      .single();
+    // Inserir Transação no wallet_ledger (a base de dados é source-of-truth)
+    const { error: ledgerError } = await supabase
+      .from('wallet_ledger')
+      .insert({
+        user_id: order.creator_id,
+        amount: creatorEarnings,
+        currency: order.currency,
+        type: 'sale',
+        status: 'completed',
+        reference_id: order.id,
+        description: 'Venda via Proxypay - Produto: ' + (order.products?.title || orderId)
+      });
 
-    if (!walletError && wallet) {
-      // Atualizar saldos
-      await supabase
-        .from('wallets')
-        .update({
-          balance: wallet.balance + creatorEarnings,
-          available_balance: wallet.available_balance + creatorEarnings,
-          total_earned: wallet.total_earned + creatorEarnings,
-        })
-        .eq('id', wallet.id);
-
-      // Inserir Transacao
-      await supabase
-        .from('wallet_transactions')
-        .insert({
-          wallet_id: wallet.id,
-          amount: creatorEarnings,
-          type: 'sale',
-          description: 'Venda do produto: ' + order.product_title,
-          status: 'completed'
-        });
+    if (ledgerError) {
+      console.error('Falha ao registar entrada no wallet_ledger:', ledgerError);
+      // Não lançamos erro fatal para não reverter o pagamento do cliente, 
+      // mas deve disparar alarme no SRE.
     }
 
     // 4. (MAGIA SAAS) Disparar o Webhook do Criador se for SaaS
@@ -110,7 +99,7 @@ serve(async (req) => {
             },
             order: {
               id: order.id,
-              amount: order.total_amount,
+              amount: order.amount_total,
               currency: order.currency
             },
             product: {
