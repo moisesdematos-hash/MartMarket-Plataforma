@@ -68,6 +68,12 @@ CREATE POLICY "Creators can see their own products" ON products FOR SELECT USING
 CREATE POLICY "Creators can insert products" ON products FOR INSERT WITH CHECK (auth.uid() = creator_id);
 -- Creators can update own products
 CREATE POLICY "Creators can update own products" ON products FOR UPDATE USING (auth.uid() = creator_id);
+-- Admins can update any product
+CREATE POLICY "Admins can update any product" ON products FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'ADMIN'
+  )
+);
 
 -- 3. ORDERS
 CREATE TABLE public.orders (
@@ -114,6 +120,17 @@ ALTER TABLE public.wallet_ledger ENABLE ROW LEVEL SECURITY;
 
 -- Users can see their own ledger entries
 CREATE POLICY "Users can see own ledger entries" ON wallet_ledger FOR SELECT USING (auth.uid() = user_id);
+
+-- Users can insert own ledger entries (Withdrawal Requests only)
+CREATE POLICY "Users can insert own ledger entries" ON wallet_ledger FOR INSERT WITH CHECK (auth.uid() = user_id AND type = 'withdrawal');
+
+-- Admins can view and update ledger entries (To approve withdrawals)
+CREATE POLICY "Admins can see all ledger entries" ON wallet_ledger FOR SELECT USING (
+  EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'ADMIN')
+);
+CREATE POLICY "Admins can update ledger entries" ON wallet_ledger FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'ADMIN')
+);
 
 -- ==============================================================================
 -- DATABASE FUNCTIONS & TRIGGERS

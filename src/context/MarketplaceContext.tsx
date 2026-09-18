@@ -452,9 +452,27 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     couponCode?: string,
     affiliateId?: string
   ): Promise<{ order: Order; paymentResult: PaymentInitiationResult }> => {
+    
+    // SEC FIX (P0): Price Tampering Defense (Never trust client-side product object)
+    const { data: realProduct, error: fetchError } = await supabase
+      .from('products')
+      .select('default_price') // bump_price could be added to schema later, using default for now
+      .eq('id', product.id)
+      .single();
+      
+    if (fetchError || !realProduct) {
+      throw new Error('Falha de Segurança: Produto inválido ou preço manipulado.');
+    }
+    
+    // Override potentially spoofed prices with the authoritative DB prices
+    const secureProduct = {
+      ...product,
+      defaultPrice: realProduct.default_price
+    };
+
     const coupon = couponCode ? coupons.find((c) => c.code.toUpperCase() === couponCode.toUpperCase()) : null;
     const priceCalculation = PaymentEngine.calculateOrderPrice(
-      product,
+      secureProduct,
       includeBump,
       coupon,
       !!affiliateId

@@ -7,6 +7,18 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // SEC FIX (P0): Webhook Authentication (Prevent fake payment injections)
+  const webhookSecret = Deno.env.get('PROXYPAY_WEBHOOK_SECRET');
+  const authHeader = req.headers.get('Authorization') || req.headers.get('x-proxypay-token');
+  
+  if (webhookSecret && authHeader !== webhookSecret && authHeader !== `Bearer ${webhookSecret}`) {
+    console.error('Tentativa de fraude bloqueada: Token de Webhook invalido.');
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });

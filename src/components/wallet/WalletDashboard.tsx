@@ -77,9 +77,12 @@ export const WalletDashboard: React.FC = () => {
   const [bankName, setBankName] = useState('Banco Angolano de Investimentos (BAI)');
   const [accountHolder, setAccountHolder] = useState(user?.fullName || 'Kelson Manuel');
   const [ibanInput, setIbanInput] = useState('AO06 ');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleRequestWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isProcessing) return;
+    
     if (!selectedPayoutMethodId) {
       showToast('error', 'Por favor selecione ou cadastre uma conta bancária.');
       return;
@@ -88,6 +91,8 @@ export const WalletDashboard: React.FC = () => {
       showToast('error', 'Saldo indisponível ou valor inválido.');
       return;
     }
+
+    setIsProcessing(true);
 
     const { error } = await supabase.from('wallet_ledger').insert({
       user_id: user?.id || 'usr-creator-1',
@@ -118,6 +123,7 @@ export const WalletDashboard: React.FC = () => {
     } else {
       showToast('error', 'Erro ao processar o levantamento na base de dados.');
     }
+    setIsProcessing(false);
   };
 
   const handleAddPayoutMethod = (e: React.FormEvent) => {
@@ -386,15 +392,15 @@ export const WalletDashboard: React.FC = () => {
               <span>Taxa de Transferência:</span>
               <span className="text-emerald-400 font-semibold">{formatMoney(0, currency)}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Prazo de Processamento:</span>
-              <span className="text-slate-200">2 a 24 horas úteis</span>
+            <div className="pt-2 flex gap-3">
+              <Button variant="outline" size="md" onClick={() => setIsWithdrawModalOpen(false)} className="w-full text-slate-400 hover:text-white">
+                Cancelar
+              </Button>
+              <Button type="submit" variant="primary" size="md" className="w-full" isLoading={isProcessing}>
+                Confirmar Saque
+              </Button>
             </div>
           </div>
-
-          <Button type="submit" variant="primary" size="lg" className="w-full mt-2">
-            Confirmar Levantamento &rarr;
-          </Button>
         </form>
       </Modal>
 

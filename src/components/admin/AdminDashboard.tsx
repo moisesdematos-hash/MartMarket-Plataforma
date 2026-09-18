@@ -50,11 +50,21 @@ export const AdminDashboard: React.FC = () => {
   const { showToast } = useNotification();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'withdrawals' | 'audit' | 'settings'>('overview');
+  
+  const [realWithdrawals, setRealWithdrawals] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    import('../../lib/supabase').then(({ supabase }) => {
+      supabase.from('wallet_ledger').select('*, user_profiles(full_name)').eq('type', 'withdrawal').order('created_at', { ascending: false }).then(({ data }) => {
+        if (data) setRealWithdrawals(data);
+      });
+    });
+  }, []);
 
   // Platform Metrics
   const gmv = orders.reduce((sum, o) => sum + o.total, 0);
   const platformRevenue = orders.reduce((sum, o) => sum + o.platformFee, 0);
-  const pendingWithdrawalsCount = withdrawals.filter((w) => w.status === 'pending').length;
+  const pendingWithdrawalsCount = realWithdrawals.filter((w) => w.status === 'pending').length;
 
   const handleApproveProduct = (id: string) => {
     updateProduct(id, { status: 'published', isPublished: true });
