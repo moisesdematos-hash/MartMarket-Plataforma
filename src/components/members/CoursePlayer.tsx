@@ -46,7 +46,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
   productId,
   onNavigate
 }) => {
-  const { products, toggleLessonCompleted, isLessonCompleted, getCourseProgressPercent } = useMarketplace();
+  const { products, orders, toggleLessonCompleted, isLessonCompleted, getCourseProgressPercent } = useMarketplace();
   const { t } = useI18n();
   const { user } = useAuth();
   const { showToast } = useNotification();
@@ -55,6 +55,11 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
   const course = product?.course;
 
   const currentUserId = user?.id || 'usr-creator-1';
+
+  // SEC FIX (P1): Check Authorization
+  const hasPurchased = orders.some(o => o.productId === productId && o.buyerId === currentUserId && o.status === 'completed');
+  // Allow creators to view their own courses
+  const isCreator = product?.creatorId === currentUserId;
 
   // First lesson as default
   const defaultLesson = course?.modules[0]?.lessons[0];
@@ -73,6 +78,18 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
         <h2 className="text-xl font-bold text-slate-100">Curso não encontrado.</h2>
         <Button variant="outline" size="sm" onClick={() => onNavigate('members')} className="mt-4">
           Voltar à Biblioteca
+        </Button>
+      </div>
+    );
+  }
+
+  if (!hasPurchased && !isCreator) {
+    return (
+      <div className="max-w-md mx-auto py-20 px-4 text-center">
+        <h2 className="text-xl font-bold text-rose-500 mb-2">Acesso Negado</h2>
+        <p className="text-slate-400 mb-4">Não tem permissão para aceder a este curso. Tem de o comprar primeiro.</p>
+        <Button variant="primary" size="sm" onClick={() => onNavigate('marketplace')}>
+          Explorar Loja
         </Button>
       </div>
     );

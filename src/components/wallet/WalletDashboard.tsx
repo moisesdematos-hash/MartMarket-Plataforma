@@ -22,11 +22,10 @@ import { useNotification } from '../../context/NotificationContext';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 import { Modal } from '../common/Modal';
+import { supabase } from '../../lib/supabase';
 
 export const WalletDashboard: React.FC = () => {
   const { 
-    wallet, 
-    ledger, 
     payoutMethods, 
     withdrawals, 
     requestWithdrawal, 
@@ -35,6 +34,36 @@ export const WalletDashboard: React.FC = () => {
   const { t, formatMoney, currency } = useI18n();
   const { user } = useAuth();
   const { showToast } = useNotification();
+
+  // State from Real DB
+  const [realWallet, setRealWallet] = useState({ availableBalance: 0, pendingBalance: 0, totalWithdrawn: 0 });
+  const [realLedger, setRealLedger] = useState<any[]>([]);
+  const [isLoadingDB, setIsLoadingDB] = useState(true);
+
+  React.useEffect(() => {
+    if (!user) return;
+    const fetchLedger = async () => {
+      const { data, error } = await supabase
+        .from('wallet_ledger')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+        
+      if (!error && data) {
+        setRealLedger(data);
+        const available = data.filter(d => d.status === 'completed' || d.status === 'available').reduce((acc, curr) => acc + curr.amount, 0);
+        const pending = data.filter(d => d.status === 'pending' || d.status === 'processing').reduce((acc, curr) => acc + curr.amount, 0);
+        const withdrawn = data.filter(d => d.type === 'withdrawal' && d.status === 'completed').reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
+        setRealWallet({ availableBalance: available, pendingBalance: pending, totalWithdrawn: withdrawn });
+      }
+      setIsLoadingDB(false);
+    };
+    fetchLedger();
+  }, [user]);
+
+  // Fallback para wallet internal
+  const wallet = { availableBalance: realWallet.availableBalance, pendingBalance: realWallet.pendingBalance, totalWithdrawn: realWallet.totalWithdrawn, currency: 'AOA' };
+  const ledger = realLedger;
 
   // Modals
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -49,25 +78,45 @@ export const WalletDashboard: React.FC = () => {
   const [accountHolder, setAccountHolder] = useState(user?.fullName || 'Kelson Manuel');
   const [ibanInput, setIbanInput] = useState('AO06 ');
 
-  const handleRequestWithdrawal = (e: React.FormEvent) => {
+  const handleRequestWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPayoutMethodId) {
       showToast('error', 'Por favor selecione ou cadastre uma conta bancária.');
       return;
     }
+    if (withdrawAmount <= 0 || withdrawAmount > wallet.availableBalance) {
+      showToast('error', 'Saldo indisponível ou valor inválido.');
+      return;
+    }
 
-    const result = requestWithdrawal(
-      user?.id || 'usr-creator-1',
-      user?.fullName || 'Kelson Manuel',
-      selectedPayoutMethodId,
-      withdrawAmount
-    );
+    const { error } = await supabase.from('wallet_ledger').insert({
+      user_id: user?.id || 'usr-creator-1',
+      amount: -withdrawAmount,
+      currency: 'AOA',
+      type: 'withdrawal',
+      status: 'pending',
+      description: 'Levantamento Bancário'
+    });
 
-    if (result.success) {
+    if (!error) {
       showToast('success', 'Pedido de levantamento registado com sucesso! O valor será processado para a sua conta.');
       setIsWithdrawModalOpen(false);
+      
+      // Update local optimistically
+      const newLedgerEntry = { 
+        amount: -withdrawAmount, 
+        status: 'pending', 
+        type: 'withdrawal', 
+        created_at: new Date().toISOString() 
+      };
+      setRealLedger([newLedgerEntry, ...realLedger]);
+      setRealWallet(prev => ({ 
+        ...prev, 
+        availableBalance: prev.availableBalance - withdrawAmount,
+        pendingBalance: prev.pendingBalance + withdrawAmount
+      }));
     } else {
-      showToast('error', result.error || 'Erro ao processar o levantamento.');
+      showToast('error', 'Erro ao processar o levantamento na base de dados.');
     }
   };
 

@@ -20,10 +20,25 @@ import {
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { useI18n } from '../../context/I18nContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 
 export const AdminDashboard: React.FC = () => {
+  const { user } = useAuth();
+  
+  if (user?.role !== 'SUPER_ADMIN' && user?.role !== 'ADMIN') {
+    return (
+      <div className="max-w-7xl mx-auto py-24 px-4 text-center">
+        <div className="w-20 h-20 mx-auto bg-rose-500/10 rounded-full flex items-center justify-center mb-6">
+          <Shield className="w-10 h-10 text-rose-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Acesso Restrito</h2>
+        <p className="text-slate-400">Esta área é restrita a administradores de topo.</p>
+      </div>
+    );
+  }
+
   const { 
     products, 
     orders, 
