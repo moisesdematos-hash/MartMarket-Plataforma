@@ -154,6 +154,37 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
   };
 
   const handlePublish = () => {
+    // SECURITY & INTEGRITY VALIDATIONS (P1 Fix)
+    if (!title || !slug) {
+      showToast('error', 'O Título e a URL (Slug) são obrigatórios.');
+      setCurrentStep(1);
+      return;
+    }
+    
+    if (productType === 'software' && !webhookUrl) {
+      showToast('error', 'Para um SaaS, deve fornecer a URL do Webhook no Passo 3.');
+      setCurrentStep(3);
+      return;
+    }
+    
+    if (['ebook', 'template'].includes(productType) && !downloadUrl) {
+      showToast('error', 'Para E-books/Templates, deve fornecer o Link de Download no Passo 3.');
+      setCurrentStep(3);
+      return;
+    }
+    
+    if (defaultPrice < 100) {
+      showToast('error', 'O preço do produto não pode ser inferior a 100 ' + currency);
+      setCurrentStep(4);
+      return;
+    }
+    
+    if (bumpEnabled && (!bumpTitle || !bumpPrice || bumpPrice <= 0)) {
+      showToast('error', 'A Oferta Extra (Bump) está ativa mas faltam dados obrigatórios no Passo 5.');
+      setCurrentStep(5);
+      return;
+    }
+
     const selectedCategoryObj = categories.find((c) => c.id === categoryId);
 
     const productPayload = {
@@ -245,11 +276,15 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
         {steps.map((s) => (
           <div
             key={s.num}
-            onClick={() => s.num <= currentStep && setCurrentStep(s.num)}
+            onClick={() => {
+              if (productId || s.num <= currentStep) {
+                setCurrentStep(s.num);
+              }
+            }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 cursor-pointer ${
               currentStep === s.num
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                : s.num < currentStep
+                : (productId || s.num < currentStep)
                 ? 'bg-slate-900 text-emerald-400 border border-emerald-500/20'
                 : 'bg-slate-900/50 text-slate-500 border border-slate-800/50'
             }`}

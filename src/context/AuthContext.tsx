@@ -106,12 +106,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password?: string): Promise<boolean> => {
+    if (!password) {
+      console.error('Password is required');
+      return false;
+    }
     setIsLoading(true);
     try {
       // Real Supabase Integration
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email, 
-        password: password || '123456' 
+        password
       });
       
       if (!error && data.user) {
@@ -177,13 +181,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password?: string,
     role: UserRole = 'CREATOR_AFFILIATE'
   ): Promise<boolean> => {
+    if (!password) {
+      console.error('Password is required');
+      return false;
+    }
+    // SEC FIX: Prevent users from passing ADMIN role on client registration
+    const safeRole = role === 'ADMIN' ? 'CREATOR_AFFILIATE' : role;
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: password || '123456',
+        password,
         options: {
-          data: { full_name: fullName, role }
+          data: { full_name: fullName, role: safeRole }
         }
       });
 

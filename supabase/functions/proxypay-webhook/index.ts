@@ -34,32 +34,28 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 1. Encontrar a Encomenda (Order)
-    const { data: order, error: orderError } = await supabase
+    // 1 e 2. Encontrar e Atualizar a Encomenda Atómicamente (Prevenção de Race Conditions)
+    // O status só atualiza se for 'pending'. Se já estiver 'completed', não faz update.
+    const { data: updatedOrders, error: updateError } = await supabase
       .from('orders')
-      .select('*, products(*)')
+      .update({ status: 'completed', payment_result: payload })
       .eq('id', orderId)
-      .single();
+      .eq('status', 'pending')
+      .select('*, products(*)');
 
-    if (orderError || !order) {
-      throw new Error('Encomenda não encontrada para o ID: ' + orderId);
+    if (updateError) {
+      throw new Error('Falha ao atualizar a encomenda: ' + updateError.message);
     }
 
-    // Se ja estiver paga, ignora
-    if (order.status === 'completed') {
-      return new Response(JSON.stringify({ message: 'Encomenda já processada' }), {
+    if (!updatedOrders || updatedOrders.length === 0) {
+      // Se não atualizou nenhuma linha, significa que ou a order não existe ou já foi paga (status != pending).
+      return new Response(JSON.stringify({ message: 'Encomenda já processada ou inexistente' }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // 2. Atualizar Encomenda para 'completed' (Paga)
-    const { error: updateError } = await supabase
-      .from('orders')
-      .update({ status: 'completed', payment_result: payload })
-      .eq('id', orderId);
-
-    if (updateError) throw updateError;
+    const order = updatedOrders[0];
 
     // 3. Processar Dinheiro na Carteira do Criador
     // Taxa da plataforma: Ex: 5%

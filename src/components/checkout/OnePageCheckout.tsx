@@ -133,6 +133,8 @@ export const OnePageCheckout: React.FC<OnePageCheckoutProps> = ({
   const handleProcessOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isProcessing) return;
+
     if (!isAuthenticated || isGuest) {
       showToast('info', 'Para comprar, precisa criar a sua conta (ou fazer login) primeiro.');
       onOpenAuth?.('register');
