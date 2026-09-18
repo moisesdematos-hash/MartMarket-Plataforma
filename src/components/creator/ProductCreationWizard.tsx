@@ -18,7 +18,8 @@ import {
   Users, 
   Eye,
   Plus,
-  Trash2
+  Trash2,
+  Webhook
 } from 'lucide-react';
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { useI18n } from '../../context/I18nContext';
@@ -49,6 +50,8 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
   const [slug, setSlug] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [description, setDescription] = useState('');
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [downloadUrl, setDownloadUrl] = useState('');
   const [categoryId, setCategoryId] = useState(categories[0]?.id || 'cat-tech');
   const [productType, setProductType] = useState<ProductType>('course');
   const [coverImage, setCoverImage] = useState('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=800');
@@ -90,6 +93,8 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
         setBumpPrice(p.bumpPrice || 0);
         setAffiliateEnabled(p.affiliateEnabled || false);
         setAffiliateCommissionRate(p.affiliateCommissionRate || 40);
+        setWebhookUrl(p.webhookUrl || '');
+        setDownloadUrl(p.downloadUrl || '');
       }
     }
   }, [productId, getProductById, categories]);
@@ -177,6 +182,8 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
       bumpDescription: bumpEnabled ? bumpDescription : undefined,
       bumpPrice: bumpEnabled ? bumpPrice : undefined,
       isSponsored: false,
+      webhookUrl: productType === 'software' ? webhookUrl : undefined,
+      downloadUrl: ['ebook', 'template'].includes(productType) ? downloadUrl : undefined,
       features: ['Acesso vitalício', 'Certificado de Conclusão'],
       course: productType === 'course' ? {
         id: `crs_${Date.now()}`,
@@ -437,13 +444,49 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
                   </div>
                 ))}
               </div>
+            ) : productType === 'software' ? (
+              <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                  <Webhook className="w-6 h-6 text-blue-400" />
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-100">Integração SaaS (Webhook)</h3>
+                    <p className="text-[11px] text-slate-400">Enviaremos um sinal POST para esta URL quando houver um pagamento aprovado.</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    URL do Webhook (Endpoint da sua API)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://api.seusaas.com/webhooks/martmarket"
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                  />
+                </div>
+              </div>
             ) : (
-              <div className="p-8 rounded-2xl bg-slate-950 border border-dashed border-slate-800 text-center space-y-3">
-                <FileText className="w-8 h-8 text-blue-400 mx-auto" />
-                <div className="text-xs font-bold text-slate-200">Ficheiro Digital Configurado</div>
-                <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
-                  Os ficheiros ficam salvos no Supabase Storage e são entregues via URL assinada segura.
-                </p>
+              <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                  <FileText className="w-6 h-6 text-blue-400" />
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-100">Entrega de Ficheiro</h3>
+                    <p className="text-[11px] text-slate-400">Para o MVP, cole o link direto do Google Drive ou Dropbox para os clientes baixarem.</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Link Secreto de Download
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
+                    value={downloadUrl}
+                    onChange={(e) => setDownloadUrl(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                  />
+                </div>
               </div>
             )}
           </div>

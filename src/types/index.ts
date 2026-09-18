@@ -167,6 +167,11 @@ export interface Product {
   bumpDescription?: string;
   bumpPrice?: number;
   
+  // Delivery config
+  webhookUrl?: string;
+  downloadUrl?: string;
+  features?: string[];
+  
   files?: ProductFile[];
   course?: Course;
   
