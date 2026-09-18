@@ -69,6 +69,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user, isGuest]);
 
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          fullName: profile?.full_name || session.user.user_metadata?.full_name || 'Utilizador Google',
+          avatarUrl: profile?.avatar_url || session.user.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400',
+          country: 'AO',
+          language: 'pt',
+          currency: 'AOA',
+          role: profile?.role || 'CREATOR_AFFILIATE',
+          isVerified: true,
+          createdAt: profile?.created_at || new Date().toISOString()
+        });
+        setIsGuest(false);
+      }
+    };
+    
+    checkSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        checkSession();
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
   const login = async (email: string, password?: string): Promise<boolean> => {
     setIsLoading(true);
     try {
@@ -123,25 +159,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = async () => {
     setIsLoading(true);
     try {
-      // Simulate/trigger OAuth
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-      if (!error) return; // Browser will redirect
-
-      // Mock Fallback
-      const googleUser: UserProfile = {
-        id: `usr_g_${Date.now()}`,
-        email: 'google.user@gmail.com',
-        fullName: 'Utilizador Google',
-        avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400',
-        country: 'AO',
-        language: 'pt',
-        currency: 'AOA',
-        role: 'CREATOR_AFFILIATE',
-        isVerified: true,
-        createdAt: new Date().toISOString()
-      };
-      setUser(googleUser);
-      setIsGuest(false);
+      const { error } = await supabase.auth.signInWithOAuth({ 
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) console.error('OAuth Error:', error);
     } finally {
       setIsLoading(false);
     }
