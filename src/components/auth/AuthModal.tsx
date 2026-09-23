@@ -63,10 +63,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   const handleGoogleLogin = async () => {
-    await loginWithGoogle();
-    showToast('success', 'Autenticado com sucesso via Google!');
-    onClose();
-    if (onSuccess) onSuccess();
+    try {
+      await loginWithGoogle();
+      // O redirect acontece aqui, então o código abaixo pode nem correr, o que é o esperado
+    } catch (err: any) {
+      showToast('error', `Falha ao ligar ao Google: ${err.message || 'Verifique se o Auth Provider está ativo no Supabase.'}`);
+    }
   };
 
   const handleGuest = () => {

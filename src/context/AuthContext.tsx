@@ -20,21 +20,6 @@ interface AuthContextType {
   switchRole: (role: UserRole) => void;
 }
 
-const DEFAULT_USER: UserProfile = {
-  id: 'usr-creator-1',
-  email: 'kelson.manuel@martmarket.com',
-  fullName: 'Kelson Manuel',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
-  phone: '+244 923 881 294',
-  country: 'AO',
-  language: 'pt',
-  currency: 'AOA',
-  role: 'CREATOR_AFFILIATE',
-  bio: 'Criador e desenvolvedor de ecossistemas digitais em Luanda.',
-  isVerified: true,
-  createdAt: '2026-01-10T10:00:00Z'
-};
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -163,13 +148,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ 
+      const { data, error } = await supabase.auth.signInWithOAuth({ 
         provider: 'google',
         options: {
           redirectTo: window.location.origin
         }
       });
-      if (error) console.error('OAuth Error:', error);
+      if (error) {
+        console.error('OAuth Error:', error);
+        throw error;
+      }
+    } catch (err: any) {
+      console.error('Catch OAuth:', err);
+      throw err;
     } finally {
       setIsLoading(false);
     }

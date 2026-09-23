@@ -45,7 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   onOpenCommandPalette
 }) => {
-  const { user, isAuthenticated, isGuest, logout, switchRole } = useAuth();
+  const { user, isAuthenticated, isGuest, logout, } = useAuth();
   const { language, setLanguage, currency, setCurrency, t } = useI18n();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { notifications, markNotificationAsRead, markAllNotificationsAsRead } = useNotification();
@@ -331,29 +331,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                       {user.role}
                     </span>
-                  </div>
-
-                  {/* Role Switcher */}
-                  <div className="px-2 py-1">
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Alternar Perfil
-                    </span>
-                    <div className="grid grid-cols-2 gap-1 mt-1">
-                      {(['CREATOR', 'AFFILIATE', 'BUYER', 'SUPER_ADMIN'] as UserRole[]).map((r) => (
-                        <button
-                          key={r}
-                          onClick={() => {
-                            switchRole(r);
-                            setIsUserMenuOpen(false);
-                          }}
-                          className={`px-2 py-1 rounded text-[10px] font-medium transition-colors cursor-pointer text-left ${
-                            user.role === r ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                          }`}
-                        >
-                          {r.replace('_', ' ')}
-                        </button>
-                      ))}
-                    </div>
                   </div>
 
                   <div className="my-1 border-t border-slate-800" />
