@@ -217,12 +217,11 @@ export interface Order {
   creatorNet: number;
   total: number;
   currency: SupportedCurrency;
+  status: 'pending' | 'completed' | 'refunded' | 'failed';
   
   couponCode?: string;
   bumpAdded: boolean;
   paymentMethod: string;
-  paymentStatus: PaymentStatus;
-  orderStatus: OrderStatus;
   createdAt: string;
   updatedAt?: string;
 }

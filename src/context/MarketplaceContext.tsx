@@ -179,8 +179,8 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         currency: 'AOA',
         bumpAdded: false,
         paymentMethod: 'multicaixa_express',
-        paymentStatus: 'completed',
-        orderStatus: 'completed',
+        status: 'completed',
+        
         createdAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString()
       }
     ];
@@ -502,8 +502,8 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       couponCode: coupon?.code,
       bumpAdded: includeBump,
       paymentMethod,
-      paymentStatus: 'completed',
-      orderStatus: 'completed',
+      status: 'completed',
+      
       createdAt: new Date().toISOString()
     };
 
