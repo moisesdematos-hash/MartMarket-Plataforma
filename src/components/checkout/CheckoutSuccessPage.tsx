@@ -110,7 +110,7 @@ export const CheckoutSuccessPage: React.FC<CheckoutSuccessPageProps> = ({
     );
   }
 
-  const isPendingMethod = orderStatus !== 'completed' && (order.paymentMethod === 'bank_reference' || order.paymentMethod === 'global_wire');
+  const isPendingMethod = orderStatus !== 'completed' && (order.paymentMethod === 'bank_reference' || order.paymentMethod === 'global_wire' || order.paymentMethod === 'paypay_angola');
 
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -139,18 +139,38 @@ export const CheckoutSuccessPage: React.FC<CheckoutSuccessPageProps> = ({
 
         {/* PayPay Angola Instruction Card */}
         {order.paymentMethod === 'paypay_angola' && (
-          <div className="p-5 rounded-2xl bg-slate-950 border border-purple-500/40 space-y-4 text-xs animate-fade-in">
-            <div className="flex items-center justify-between text-purple-400 font-bold">
-              <span className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4" /> PayPay Angola • Carteira Digital
-              </span>
-              <Badge variant="primary" size="sm">Aprovado Instantâneo</Badge>
+            <div className="p-5 rounded-2xl bg-slate-950 border border-purple-500/40 space-y-6 text-xs animate-fade-in">
+              <div className="flex items-center justify-between text-purple-400 font-bold border-b border-purple-500/20 pb-3">
+                <span className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4" /> PayPay Africa - Digital Wallet
+                </span>
+                <Badge variant={isPendingMethod ? 'warning' : 'primary'} size="sm">
+                  {isPendingMethod ? 'Aguardando Pagamento' : 'Aprovado Instantâneo'}
+                </Badge>
+              </div>
+              
+              {isPendingMethod ? (
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <div className="flex-1 space-y-3">
+                    <p className="text-slate-300 leading-relaxed text-sm">
+                      Foi enviada uma notificação para o telemóvel <span className="font-bold text-white">{order.buyerPhone}</span>.
+                      Abra a app PayPay Angola e confirme o pagamento para libertar o acesso.
+                    </p>
+                    <p className="text-slate-500 text-xs">
+                      Se não recebeu a notificação, abra a app e leia o Código QR ao lado.
+                    </p>
+                  </div>
+                  <div className="w-32 h-32 bg-white rounded-xl p-2 flex items-center justify-center shrink-0">
+                    <QrCode className="w-24 h-24 text-slate-900" />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-slate-300 leading-relaxed">
+                  O débito foi processado com sucesso na sua carteira PayPay. As suas credenciais de acesso foram emitidas.
+                </p>
+              )}
             </div>
-            <p className="text-slate-300 leading-relaxed">
-              O débito foi processado com sucesso na sua carteira PayPay associada ao telemóvel informado. As suas credenciais de acesso foram emitidas.
-            </p>
-          </div>
-        )}
+          )}
 
         {/* Multicaixa Reference Instruction Box (if Bank Reference) */}
         {order.paymentMethod === 'bank_reference' && paymentResult && (
