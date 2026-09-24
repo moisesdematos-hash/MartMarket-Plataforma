@@ -22,8 +22,56 @@ export const MembersLibrary: React.FC<MembersLibraryProps> = ({ onNavigate }) =>
   const [activeTab, setActiveTab] = useState<'products' | 'subscriptions' | 'podcast' | 'support' | 'community'>('products');
   const [pdfViewer, setPdfViewer] = useState<{ url: string; title: string } | null>(null);
 
-  // For demonstration and real users, show purchased products or default enrolled courses
-  const enrolledProducts = products;
+  const [enrolledProducts, setEnrolledProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  React.useEffect(() => {
+    const fetchPurchasedProducts = async () => {
+      if (!user) {
+        setLoadingProducts(false);
+        return;
+      }
+      try {
+        const { supabase } = await import('../../lib/supabase');
+        // Fetch real orders from database for this buyer
+        const { data: orders, error } = await supabase
+          .from('orders')
+          .select('*, product:products(*)')
+          .eq('buyer_id', user.id)
+          .eq('status', 'completed'); // Only show completed purchases!
+
+        if (error) {
+          console.error('Error fetching library:', error);
+          setEnrolledProducts([]);
+          return;
+        }
+
+        if (orders) {
+          const formattedProducts = orders.map(o => {
+            const p = Array.isArray(o.product) ? o.product[0] : o.product;
+            if (!p) return null;
+            return {
+              id: p.id,
+              title: p.title,
+              slug: p.slug,
+              coverImage: p.cover_image,
+              productType: p.type,
+              downloadUrl: p.download_url,
+              course: p.type === 'course' ? { id: p.id } : undefined // Mock course reference for progress
+            };
+          }).filter(Boolean);
+          
+          setEnrolledProducts(formattedProducts);
+        }
+      } catch (err) {
+        console.error('Library error:', err);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    fetchPurchasedProducts();
+  }, [user]);
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -185,19 +233,41 @@ export const MembersLibrary: React.FC<MembersLibraryProps> = ({ onNavigate }) =>
                     </Button>
                   ) : (
                     <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => {
-                        setPdfViewer({
-                          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-                          title: product.title
-                        });
-                      }}
-                      leftIcon={<Shield className="w-3.5 h-3.5" />}
-                      className="w-full"
-                    >
-                      Ler E-book Protegido
-                    </Button>
+                        variant="success"
+                        size="sm"
+                        onClick={async () => {
+                          if (!product.downloadUrl) {
+                            alert('Este e-book não possui ficheiro anexado.');
+                            return;
+                          }
+                          try {
+                            const { supabase } = await import('../../lib/supabase');
+                            // If it's a full URL (legacy mockup)
+                            if (product.downloadUrl.startsWith('http')) {
+                              setPdfViewer({ url: product.downloadUrl, title: product.title });
+                              return;
+                            }
+                            // Generate signed URL for private bucket
+                            const { data, error } = await supabase.storage
+                              .from('product_files')
+                              .createSignedUrl(product.downloadUrl, 3600); // 1 hour access
+                              
+                            if (error || !data) throw error;
+                            
+                            setPdfViewer({
+                              url: data.signedUrl,
+                              title: product.title
+                            });
+                          } catch (err) {
+                            console.error('Falha ao aceder ao e-book:', err);
+                            alert('Falha ao abrir o e-book. Verifique as permissões.');
+                          }
+                        }}
+                        leftIcon={<Shield className="w-3.5 h-3.5" />}
+                        className="w-full"
+                      >
+                        Ler E-book Protegido
+                      </Button>
                   )}
                 </div>
               </div>
