@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // MARTMARKET MARKETPLACE & CORE DATA CONTEXT
 // ==============================================================================
 
@@ -149,6 +149,76 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     fetchRealProducts();
   }, []);
 
+  useEffect(() => {
+    // Fetch ledger from Supabase if user is logged in
+    const fetchLedger = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
+      
+      const { data, error } = await supabase.from('wallet_ledger').select('*').eq('user_id', userData.user.id).order('created_at', { ascending: false });
+      
+      if (data && data.length > 0) {
+        const dbLedger: any = data.map(dbL => ({
+          id: dbL.id,
+          userId: dbL.user_id,
+          orderId: dbL.reference_id || 'manual',
+          type: dbL.type,
+          amount: dbL.amount,
+          currency: dbL.currency,
+          status: dbL.status,
+          description: dbL.description,
+          createdAt: dbL.created_at
+        }));
+        
+        setLedger(dbLedger);
+        
+        // Calculate Wallet Balances from Ledger
+        let available = 0;
+        let pending = 0;
+        let withdrawn = 0;
+        
+        dbLedger.forEach((entry: any) => {
+          if (entry.status === 'available') {
+            available += entry.amount;
+          } else if (entry.status === 'pending') {
+            if (entry.type === 'withdrawal') {
+              // Withdrawal requests deduct from available instantly to prevent double-spending
+              available += entry.amount; // amount is usually negative for withdrawal
+            } else {
+              pending += entry.amount;
+            }
+          } else if (entry.status === 'completed' && entry.type === 'withdrawal') {
+            available += entry.amount;
+            withdrawn += Math.abs(entry.amount);
+          }
+        });
+        
+        setWallet(prev => ({
+          ...prev,
+          userId: userData.user.id,
+          availableBalance: available,
+          pendingBalance: pending,
+          totalWithdrawn: withdrawn,
+          updatedAt: new Date().toISOString()
+        }));
+        
+        // Populate withdrawals array
+        const wReqs: any = dbLedger.filter((l: any) => l.type === 'withdrawal').map((l: any) => ({
+          id: l.id,
+          userId: l.userId,
+          amount: Math.abs(l.amount),
+          currency: l.currency,
+          status: l.status,
+          payoutMethodId: 'bank',
+          createdAt: l.createdAt,
+          processedAt: l.status === 'completed' ? l.createdAt : undefined
+        }));
+        setWithdrawals(wReqs);
+      }
+    };
+    
+    fetchLedger();
+  }, []);
   const [categories] = useState<ProductCategory[]>(INITIAL_CATEGORIES);
 
   // Orders
@@ -161,13 +231,13 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         id: 'ord-1',
         orderNumber: 'MM-89214',
         buyerId: 'usr-buyer-1',
-        buyerName: 'António Silva',
+        buyerName: 'AntÃƒÂ³nio Silva',
         buyerEmail: 'antonio.silva@gmail.com',
         buyerPhone: '+244 923 111 222',
         buyerCountry: 'AO',
         creatorId: 'usr-creator-1',
         productId: 'prod-react-fullstack',
-        productTitle: 'Masterclass Fullstack: De Zero a SaaS Escalável',
+        productTitle: 'Masterclass Fullstack: De Zero a SaaS EscalÃƒÂ¡vel',
         productCoverImage: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800',
         productType: 'course',
         subtotal: 35000,
@@ -229,7 +299,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         amount: -120000,
         currency: 'AOA',
         balanceAfter: 452765,
-        description: 'Levantamento Bancário para BAI AO06 (Concluído)',
+        description: 'Levantamento BancÃƒÂ¡rio para BAI AO06 (ConcluÃƒÂ­do)',
         referenceId: 'WITH-1029',
         createdAt: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString()
       }
@@ -292,11 +362,11 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         id: 'rev-1',
         productId: 'prod-react-fullstack',
         userId: 'usr-buyer-1',
-        userName: 'António Silva',
+        userName: 'AntÃƒÂ³nio Silva',
         userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
         rating: 5,
-        title: 'Excelente curso, muito prático e direto ao ponto!',
-        comment: 'As aulas sobre integração de pagamentos e estruturação de banco de dados economizaram meses de desenvolvimento no meu projeto.',
+        title: 'Excelente curso, muito prÃƒÂ¡tico e direto ao ponto!',
+        comment: 'As aulas sobre integraÃƒÂ§ÃƒÂ£o de pagamentos e estruturaÃƒÂ§ÃƒÂ£o de banco de dados economizaram meses de desenvolvimento no meu projeto.',
         createdAt: '2026-02-28T10:00:00Z'
       },
       {
@@ -307,7 +377,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
         rating: 5,
         title: 'O melhor material sobre investimentos em Angola.',
-        comment: 'A explicação sobre títulos do tesouro e mercado de capitais é super clara e aplicável.',
+        comment: 'A explicaÃƒÂ§ÃƒÂ£o sobre tÃƒÂ­tulos do tesouro e mercado de capitais ÃƒÂ© super clara e aplicÃƒÂ¡vel.',
         createdAt: '2026-03-02T14:30:00Z'
       }
     ];
@@ -461,7 +531,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       .single();
       
     if (fetchError || !realProduct) {
-      throw new Error('Falha de Segurança: Produto inválido ou preço manipulado.');
+      throw new Error('Falha de SeguranÃƒÂ§a: Produto invÃƒÂ¡lido ou preÃƒÂ§o manipulado.');
     }
     
     // Override potentially spoofed prices with the authoritative DB prices
@@ -629,55 +699,60 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     payoutMethodId: string,
     amount: number
   ): { success: boolean; error?: string } => {
-    if (amount <= 0) return { success: false, error: 'Valor de levantamento inválido.' };
+    if (amount <= 0) return { success: false, error: 'Valor de levantamento invÃ¡lido.' };
     if (amount > wallet.availableBalance) {
-      return { success: false, error: 'Saldo disponível insuficiente para este levantamento.' };
+      return { success: false, error: 'Saldo disponÃ­vel insuficiente para este levantamento.' };
     }
 
     const payoutMethod = payoutMethods.find((p) => p.id === payoutMethodId);
     if (!payoutMethod) {
-      return { success: false, error: 'Método de levantamento não encontrado.' };
+      return { success: false, error: 'MÃ©todo de levantamento nÃ£o encontrado.' };
     }
 
+    // Insert into Supabase Ledger
+    supabase.from('wallet_ledger').insert([{
+      user_id: userId,
+      amount: -amount,
+      currency: wallet.currency,
+      type: 'withdrawal',
+      status: 'pending',
+      description: 'Levantamento para ' + (payoutMethod.bankName)
+    }]).then(({ error }) => {
+      if (error) console.error("Error creating withdrawal in Supabase", error);
+    });
+
     const newBalance = wallet.availableBalance - amount;
-    const newTotalWithdrawn = wallet.totalWithdrawn + amount;
 
     setWallet((prev) => ({
       ...prev,
       availableBalance: newBalance,
-      totalWithdrawn: newTotalWithdrawn,
       updatedAt: new Date().toISOString()
     }));
 
-    const newWithdrawal: WithdrawalRequest = {
-      id: `with_${Date.now()}`,
+    const withdrawal: any = {
+      id: crypto.randomUUID(),
       userId,
-      userName,
-      payoutMethodId,
-      payoutDetails: `${payoutMethod.bankName} - ${payoutMethod.ibanOrAccount}`,
       amount,
-      fee: 0,
-      netAmount: amount,
       currency: wallet.currency,
       status: 'pending',
+      payoutMethodId,
       createdAt: new Date().toISOString()
     };
-
-    setWithdrawals((prev) => [newWithdrawal, ...prev]);
-
-    const newLedger: LedgerEntry = {
-      id: `ledg_${Date.now()}`,
+    
+    const ledgerEntry: any = {
+      id: crypto.randomUUID(),
       userId,
+      orderId: 'manual',
       type: 'withdrawal',
       amount: -amount,
       currency: wallet.currency,
-      balanceAfter: newBalance,
-      description: `Pedido de levantamento para ${payoutMethod.bankName} (${payoutMethod.ibanOrAccount})`,
-      referenceId: newWithdrawal.id,
+      status: 'pending',
+      description: 'Levantamento para ' + (payoutMethod.bankName),
       createdAt: new Date().toISOString()
     };
 
-    setLedger((prev) => [newLedger, ...prev]);
+    setWithdrawals((prev) => [withdrawal, ...prev]);
+    setLedger((prev) => [ledgerEntry, ...prev]);
 
     return { success: true };
   };
