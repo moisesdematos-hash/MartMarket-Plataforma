@@ -26,7 +26,9 @@ export type ProductType =
   | 'document' 
   | 'template' 
   | 'software' 
-  | 'community' 
+  | 'community'
+  | 'mentorship'
+  | 'service' 
   | 'custom';
 
 export type OrderStatus = 

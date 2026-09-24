@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, Sparkles, MinusCircle, Maximize2 } from 'lucide-react';
+import { Bot, X, Send, Sparkles, MinusCircle, Maximize2, Loader2 } from 'lucide-react';
+import { AICopilotService } from '../../services/ai/aiCopilot';
 
 interface Message {
   id: string;
@@ -12,6 +13,7 @@ export const AiCopilotWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputText, setInputText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'msg-1',
@@ -27,7 +29,7 @@ export const AiCopilotWidget: React.FC = () => {
     if (isOpen && !isMinimized) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOpen, isMinimized]);
+  }, [messages, isOpen, isMinimized, isTyping]);
 
   useEffect(() => {
     const handleOpenCopilot = () => {
@@ -38,53 +40,50 @@ export const AiCopilotWidget: React.FC = () => {
     return () => window.removeEventListener('open-ai-copilot', handleOpenCopilot);
   }, []);
 
-  const handleSend = (e?: React.FormEvent) => {
+  const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isTyping) return;
 
+    const userText = inputText.trim();
     const newMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputText,
+      content: userText,
       timestamp: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, newMsg]);
+    const newHistory = [...messages, newMsg];
+    setMessages(newHistory);
     setInputText('');
+    setIsTyping(true);
 
-    // Simulate AI typing and response
-    setTimeout(() => {
-      let aiResponse = "Desculpe, não compreendi. Poderia reformular?";
-      const lowerInput = newMsg.content.toLowerCase();
+    try {
+      const historyPayload = newHistory.map(m => ({ role: m.role, content: m.content }));
+      const aiReply = await AICopilotService.chatWithMarty(userText, historyPayload);
       
-      if (lowerInput.includes('criar') && lowerInput.includes('produto')) {
-        aiResponse = "Para **criar um produto**, vá ao menu do topo e clique em **Criador**. Depois, clique no botão azul **+ Novo Produto**. Pode criar cursos, E-books, templates e muito mais!";
-      } else if (lowerInput.includes('afiliad') || lowerInput.includes('vender produto dos outros')) {
-        aiResponse = "Temos uma **Central de Afiliados**! Vá ao menu do topo e clique em **Afiliados**. Lá poderá encontrar produtos com comissões fantásticas e solicitar afiliação com 1 clique.";
-      } else if (lowerInput.includes('suporte') || lowerInput.includes('chat')) {
-        aiResponse = "O Chat de Suporte está disponível em dois lugares: na **Área de Membros** (aba Suporte) para os alunos enviarem mensagens, e no **Painel do Criador** (aba Chat de Suporte) para o produtor responder.";
-      } else if (lowerInput.includes('dinheiro') || lowerInput.includes('levantamento') || lowerInput.includes('sacar')) {
-        aiResponse = "Os seus ganhos vão diretos para o seu *Ledger*! Para levantar, vá à aba **Carteira** (Wallet) no menu superior, adicione o seu IBAN/Conta Bancária Angolana e clique em Levantar Kz.";
-      } else if (lowerInput.includes('upsell') || lowerInput.includes('funil') || lowerInput.includes('bump')) {
-        aiResponse = "O MartMarket tem ferramentas avançadas! Pode configurar **Order Bumps** ao criar o produto (Etapa 3), ou aceder ao construtor de **Upsell de 1-Clique** na aba 'Upsell de 1-Clique' dentro do Painel do Criador.";
-      } else if (lowerInput.includes('comunidade') || lowerInput.includes('skool') || lowerInput.includes('kajabi')) {
-        aiResponse = "Sim! Temos uma **Comunidade Standalone VIP** integrada (semelhante ao Skool/Kajabi). Pode vender o acesso através de Assinaturas Mensais, incluir Leaderboards e marcar Meetups. Está na Área de Membros.";
-      } else if (lowerInput.includes('claro') || lowerInput.includes('white')) {
-        aiResponse = "O MartMarket não possui modo claro. A plataforma foi desenhada nativamente num **Premium Dark Mode** para focar a conversão e transmitir uma estética luxuosa, semelhante às melhores plataformas do mundo (Vercel, Stripe).";
-      } else {
-        aiResponse = "Como IA de simulação do MartMarket, conheço perfeitamente a plataforma. Pode perguntar-me sobre **Criação de Produtos, Pagamentos, Afiliados, Comunidade, Suporte** ou **Funis de Vendas**.";
-      }
-
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 1).toString(),
+          id: Date.now().toString(),
           role: 'assistant',
-          content: aiResponse,
+          content: aiReply,
           timestamp: new Date().toISOString(),
         }
       ]);
-    }, 800);
+    } catch (error) {
+      console.error(error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: "Oops! Houve uma falha de comunicação com os meus servidores da Groq. Tente novamente.",
+          timestamp: new Date().toISOString(),
+        }
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   if (!isOpen) {
@@ -145,6 +144,16 @@ export const AiCopilotWidget: React.FC = () => {
                 </span>
               </div>
             ))}
+            
+            {isTyping && (
+              <div className="flex flex-col items-start">
+                <div className="max-w-[85%] px-4 py-3 bg-slate-800 border border-slate-700 text-slate-200 rounded-2xl rounded-bl-sm flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                  <span className="text-xs text-slate-400">A processar...</span>
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
 
@@ -153,12 +162,13 @@ export const AiCopilotWidget: React.FC = () => {
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
+              disabled={isTyping}
               placeholder="Pergunte-me algo..."
-              className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+              className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 disabled:opacity-50"
             />
             <button
               type="submit"
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() || isTyping}
               className="p-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-4 h-4" />

@@ -397,6 +397,8 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
                 { type: 'template' as ProductType, label: t('productTypeTemplate'), desc: 'Figma, Notion, modelos gráficos e planilhas', icon: Layers },
                 { type: 'community' as ProductType, label: t('productTypeCommunity'), desc: 'Acesso a comunidade privada e networking', icon: Users },
                 { type: 'audio' as ProductType, label: 'Áudios & Podcasts', desc: 'Séries de áudio e meditações guiadas', icon: Music },
+                { type: 'mentorship' as ProductType, label: 'Mentoria & Consultoria', desc: 'Sessões 1-a-1 e acompanhamento por videochamada', icon: Sparkles },
+                { type: 'service' as ProductType, label: 'Serviços Freelance', desc: 'Auditorias, Code Reviews, e serviços personalizados', icon: FileText },
               ].map((item) => {
                 const Icon = item.icon;
                 const isSelected = productType === item.type;

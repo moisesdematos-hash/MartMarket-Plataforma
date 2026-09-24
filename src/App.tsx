@@ -50,7 +50,14 @@ export function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
+
   // Check URL query parameters for affiliate links & initial routing
+  useEffect(() => {
+    if (isAuthenticated && currentView === 'landing') {
+      setCurrentView('marketplace');
+    }
+  }, [isAuthenticated, currentView]);
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refCode = urlParams.get('ref');

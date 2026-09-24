@@ -1,5 +1,7 @@
+import { supabase } from '../../lib/supabase';
+
 // ==============================================================================
-// MARTMARKET AI CREATOR COPILOT (DECOUPLED & INTELLIGENT)
+// MARTMARKET AI CREATOR COPILOT (POWERED BY GROQ & LLAMA 3)
 // ==============================================================================
 
 export interface AICopyResult {
@@ -20,81 +22,134 @@ export interface AIFAQItem {
   answer: string;
 }
 
+const callGroqAPI = async (systemPrompt: string, userPrompt: string) => {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error('Groq API Key (VITE_GROQ_API_KEY) não está definida.');
+  }
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'openai/gpt-oss-20b',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 1500,
+      response_format: { type: 'json_object' }
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('Groq API Error:', errorData);
+    throw new Error(errorData.error?.message || 'Falha na comunicação com a API de IA');
+  }
+
+  const data = await response.json();
+  return JSON.parse(data.choices[0].message.content);
+};
+
 export class AICopilotService {
   /**
    * Generates high-converting sales copy based on product topic and target market
    */
   static async generateSalesCopy(topic: string, format: string, targetMarket: string = 'Angola & Global'): Promise<AICopyResult> {
-    // Fast generative heuristics engine with rich localization
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    const systemPrompt = `És um especialista em Copywriting de classe mundial para a plataforma MartMarket (tipo Hotmart). O teu objetivo é vender info-produtos. Retorna OBRIGATORIAMENTE um objeto JSON estrito com esta exata estrutura:
+{
+  "headline": "Título ultra persuasivo de alto impacto",
+  "subheadline": "Subtítulo explicando o benefício principal (1-2 frases)",
+  "bulletPoints": ["Benefício forte 1", "Benefício forte 2", "Benefício forte 3", "Benefício forte 4"],
+  "targetAudience": "Público alvo e a sua principal dor resolvida (1 frase)",
+  "seoDescription": "Descrição rica em palavras-chave para SEO (max 160 caracteres)"
+}
+A língua DEVE ser Português (PT-PT).`;
 
-    return {
-      headline: `Domine ${topic} e Acelere os seus Resultados no Mercado ${targetMarket}`,
-      subheadline: `O método prático em formato ${format} passo a passo para criar novas fontes de receita e alcançar liberdade financeira e profissional.`,
-      bulletPoints: [
-        `Metodologia 100% prática e adaptada à realidade de ${targetMarket}.`,
-        `Estratégias testadas para economizar meses de erros e tentativas.`,
-        `Materiais de apoio, planilhas e templates prontos para copiar e colar.`,
-        `Acesso imediato com suporte direto para tirar dúvidas.`
-      ],
-      targetAudience: `Profissionais, empreendedores e criadores que desejam monetizar competências em ${topic} sem complexidade.`,
-      seoDescription: `Aprenda ${topic} com o melhor conteúdo em ${format}. Acesso vitalício, certificado e pagamentos flexíveis em Kwanza (AOA) e moedas internacionais.`
-    };
+    const userPrompt = `Cria uma copy focada em vendas agressivas mas autênticas para um produto digital.\nTema: "${topic}"\nFormato: "${format}"\nMercado: "${targetMarket}".`;
+
+    return await callGroqAPI(systemPrompt, userPrompt);
   }
 
   /**
    * Generates structured curriculum modules and lesson titles
    */
   static async generateCourseCurriculum(topic: string, level: string = 'Do Básico ao Avançado'): Promise<AICurriculumModule[]> {
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    const systemPrompt = `És um designer instrucional e criador de cursos profissionais. Retorna OBRIGATORIAMENTE um objeto JSON estrito com a estrutura:
+{
+  "modules": [
+    {
+      "title": "Nome do Módulo 1 (ex: Módulo 1: Fundamentos)",
+      "lessons": ["Nome da Lição 1.1", "Nome da Lição 1.2"]
+    }
+  ]
+}
+Gera 3 a 4 módulos, cada um com 3 a 5 lições focadas na prática. Língua: Português (PT-PT).`;
 
-    return [
-      {
-        title: `Módulo 1: Fundamentos & Mentalidade de ${topic}`,
-        lessons: [
-          '1.1 Boas-vindas e Visão Geral do Método',
-          '1.2 Conceitos-Chave e Como o Mercado Funciona',
-          '1.3 Ferramentas Essenciais e Configuração Inicial'
-        ]
-      },
-      {
-        title: `Módulo 2: Estratégias Práticas e Execução`,
-        lessons: [
-          '2.1 Passo a Passo da Implementação',
-          '2.2 Estudos de Caso Reais e Erros Frequentes a Evitar',
-          '2.3 Otimização de Processos e Produtividade'
-        ]
-      },
-      {
-        title: `Módulo 3: Monetização, Vendas & Escala`,
-        lessons: [
-          '3.1 Como Precificar e Atrair Clientes',
-          '3.2 Funis de Vendas com Pagamentos Locais (Multicaixa/Cartão)',
-          '3.3 Escalando os Ganhos de Forma Sustentável'
-        ]
-      }
-    ];
+    const userPrompt = `Cria um currículo de aulas detalhado e sequencial para um curso cujo tema é "${topic}". O nível de ensino é "${level}".`;
+
+    const result = await callGroqAPI(systemPrompt, userPrompt);
+    return result.modules;
   }
 
   /**
    * Generates dynamic FAQs tailored to the product
    */
   static async generateFAQs(topic: string, refundDays: number = 7): Promise<AIFAQItem[]> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    const systemPrompt = `És um assistente de suporte ao cliente especializado em reduzir hesitações de compra. Retorna OBRIGATORIAMENTE um objeto JSON com:
+{
+  "faqs": [
+    { "question": "Pergunta comum do cliente?", "answer": "Resposta reconfortante" }
+  ]
+}
+Gera 3 a 5 FAQs comuns. Língua: Português (PT-PT).`;
 
-    return [
-      {
-        question: `Como receberei o acesso após o pagamento?`,
-        answer: `O acesso é libertado imediatamente após a confirmação do pagamento. Se pagar por Multicaixa Express ou Cartão, o acesso é instantâneo no ecrã e enviado para o seu email.`
-      },
-      {
-        question: `Preciso ter conhecimento prévio em ${topic}?`,
-        answer: `Não! O conteúdo foi estruturado do nível introdutório ao avançado, com linguagem acessível e exemplos práticos.`
-      },
-      {
-        question: `Como funciona a garantia de reembolso?`,
-        answer: `Você conta com uma garantia incondicional de ${refundDays} dias. Se não gostar do conteúdo, basta solicitar o reembolso no painel e o valor será integralmente estornado.`
-      }
-    ];
+    const userPrompt = `Gera as Perguntas Frequentes (FAQ) de pré-compra para um produto sobre "${topic}". Lembra-te que a plataforma (MartMarket) tem garantia de reembolso incondicional de ${refundDays} dias, pagamento instantâneo por Multicaixa ou Cartão, e acesso imediato.`;
+
+    const result = await callGroqAPI(systemPrompt, userPrompt);
+    return result.faqs;
+  }
+
+  /**
+   * Generates an automatic response to a student support ticket
+   */
+  static async generateSupportReply(ticketSubject: string, productTitle: string, lastStudentMessage: string, creatorName: string): Promise<string> {
+    const systemPrompt = `És o criador "${creatorName}" do produto "${productTitle}". Estás a responder de forma gentil e muito prestativa ao ticket de suporte com o assunto "${ticketSubject}". Retorna OBRIGATORIAMENTE um JSON com:
+{
+  "reply": "O texto da tua resposta natural e humanizada (max 3 frases)."
+}
+A língua é Português (PT-PT).`;
+
+    const userPrompt = `A última mensagem do aluno foi: "${lastStudentMessage}". Gera uma resposta de ajuda.`;
+
+    const result = await callGroqAPI(systemPrompt, userPrompt);
+    return result.reply;
+  }
+
+  /**
+   * Generates a conversational reply for the Marty AI floating widget
+   */
+  static async chatWithMarty(userMessage: string, chatHistory: {role: string, content: string}[]): Promise<string> {
+    const systemPrompt = `És o 'Marty AI', o assistente virtual oficial e super inteligente do MartMarket.
+O MartMarket é uma plataforma angolana de venda de produtos digitais (cursos, ebooks, templates), com Checkout próprio, Multicaixa Express, Cartão Visa/Mastercard, Order Bumps, Upsells de 1-clique, Sistema de Afiliados, e Comunidades VIP.
+Deves ajudar os utilizadores que estão a navegar no site (potenciais criadores ou alunos) com as suas dúvidas.
+Sê conciso, simpático e usa formatação markdown (como **negrito**).
+Responde sempre em Português (PT-PT).
+Retorna OBRIGATORIAMENTE um JSON com esta exata estrutura:
+{
+  "reply": "O teu texto formatado em markdown"
+}`;
+
+    const recentHistory = chatHistory.slice(-5).map(m => `${m.role === 'user' ? 'Utilizador' : 'Marty'}: ${m.content}`).join('\n');
+    
+    const userPrompt = `Histórico da conversa:\n${recentHistory}\n\nMensagem atual do utilizador:\n${userMessage}\n\nGera a tua resposta em JSON.`;
+
+    const result = await callGroqAPI(systemPrompt, userPrompt);
+    return result.reply;
   }
 }

@@ -155,3 +155,42 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+-- 5. SUPPORT CHAT
+CREATE TABLE public.support_tickets (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id UUID REFERENCES public.products(id) NOT NULL,
+  buyer_id UUID REFERENCES public.user_profiles(id) NOT NULL,
+  creator_id UUID REFERENCES public.user_profiles(id) NOT NULL,
+  subject TEXT NOT NULL,
+  status TEXT DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED')),
+  priority TEXT DEFAULT 'NORMAL' CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'URGENT')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Buyers can see own tickets" ON support_tickets FOR SELECT USING (auth.uid() = buyer_id);
+CREATE POLICY "Creators can see own tickets" ON support_tickets FOR SELECT USING (auth.uid() = creator_id);
+CREATE POLICY "Buyers can insert tickets" ON support_tickets FOR INSERT WITH CHECK (auth.uid() = buyer_id);
+CREATE POLICY "Creators can update tickets" ON support_tickets FOR UPDATE USING (auth.uid() = creator_id);
+
+CREATE TABLE public.support_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  ticket_id UUID REFERENCES public.support_tickets(id) ON DELETE CASCADE NOT NULL,
+  sender_id UUID REFERENCES public.user_profiles(id) NOT NULL,
+  text TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+ALTER TABLE public.support_messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can see messages of their tickets" ON support_messages FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM support_tickets WHERE id = support_messages.ticket_id AND (buyer_id = auth.uid() OR creator_id = auth.uid())
+  )
+);
+CREATE POLICY "Users can insert messages to their tickets" ON support_messages FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM support_tickets WHERE id = support_messages.ticket_id AND (buyer_id = auth.uid() OR creator_id = auth.uid())
+  ) AND auth.uid() = sender_id
+);
