@@ -64,6 +64,7 @@ export const OnePageCheckout: React.FC<OnePageCheckoutProps> = ({
   const [appliedCouponCode, setAppliedCouponCode] = useState<string | undefined>(undefined);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('multicaixa_express');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Urgency Countdown Timer (14:59 ticking down)
   const [timeLeft, setTimeLeft] = useState(14 * 60 + 59);
@@ -132,6 +133,10 @@ export const OnePageCheckout: React.FC<OnePageCheckoutProps> = ({
 
   const handleProcessOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!acceptedTerms) {
+      showToast('error', 'Tem de aceitar os Termos e Condições para prosseguir.');
+      return;
+    }
 
     if (isProcessing) return;
 
@@ -219,7 +224,7 @@ export const OnePageCheckout: React.FC<OnePageCheckoutProps> = ({
         {/* Left Column (7 cols): Buyer Form & Payment Providers */}
         <div className="lg:col-span-7 space-y-6">
           
-          <form onSubmit={handleProcessOrder} className="space-y-6">
+          <form id="checkout-form" onSubmit={handleProcessOrder} className="space-y-6">
             
             {/* 1. Buyer Information */}
             <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
@@ -428,17 +433,6 @@ export const OnePageCheckout: React.FC<OnePageCheckoutProps> = ({
                     </p>
                   </div>
                 </label>
-
-                {/* Sandbox Simulator */}
-                <PaymentSandboxSimulator
-                  currentMethod={selectedPaymentMethod}
-                  onSimulateApproved={(method) => {
-                    handleProcessOrder({ preventDefault: () => {} } as any);
-                  }}
-                  onSimulateDeclined={() => {
-                    showToast('error', 'Simulação: Pagamento recusado pelo emissor bancário.');
-                  }}
-                />
               </div>
             </div>
 
@@ -509,17 +503,6 @@ export const OnePageCheckout: React.FC<OnePageCheckoutProps> = ({
                 </div>
               </div>
             </div>
-
-            {/* Checkout CTA */}
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              isLoading={isProcessing}
-              className="w-full py-4 text-base font-bold shadow-xl shadow-blue-500/25 cursor-pointer"
-            >
-              {t('payNow')} ({formatMoney(totalWithAllBumps, priceBreakdown.currency)})
-            </Button>
           </form>
 
           {/* Social Proof & Verified Testimonials */}
@@ -655,6 +638,38 @@ export const OnePageCheckout: React.FC<OnePageCheckoutProps> = ({
               <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
               <span>Garantia incondicional de {product.refundDays} dias de satisfação ou reembolso total.</span>
             </div>
+
+            {/* Terms and Conditions */}
+            <div className="pt-2">
+              <label className="flex items-start gap-2 cursor-pointer group">
+                <div className="relative flex items-center justify-center w-4 h-4 mt-0.5 rounded border border-slate-600 bg-slate-900 group-hover:border-blue-500 shrink-0">
+                  <input
+                    type="checkbox"
+                    className="absolute opacity-0 w-full h-full cursor-pointer"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    required
+                    form="checkout-form"
+                  />
+                  {acceptedTerms && <Check className="w-3 h-3 text-blue-400" />}
+                </div>
+                <span className="text-[11px] text-slate-400 leading-relaxed">
+                  Li e aceito os <a href="#" className="text-blue-400 hover:underline">Termos de Uso</a> e a <a href="#" className="text-blue-400 hover:underline">Política de Privacidade</a>, e concordo em abdicar do direito de arrependimento (14 dias) após o download/acesso a conteúdos digitais.
+                </span>
+              </label>
+            </div>
+
+            {/* Checkout CTA */}
+            <Button
+              type="submit"
+              form="checkout-form"
+              variant="primary"
+              size="lg"
+              isLoading={isProcessing}
+              className="w-full py-4 text-sm font-bold shadow-xl shadow-blue-500/25 cursor-pointer uppercase tracking-wide"
+            >
+              {t('payNow')} ({formatMoney(totalWithAllBumps, priceBreakdown.currency)})
+            </Button>
           </div>
         </div>
       </div>

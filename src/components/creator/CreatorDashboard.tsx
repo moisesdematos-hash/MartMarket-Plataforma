@@ -147,25 +147,71 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ onNavigate }
             {formatMoney(wallet.availableBalance, currency)}
           </div>
           <button
-              key={tab.id}
-              onClick={() => {
-                if (tab.isFake) {
-                  alert('🚀 Funcionalidade em Breve! O MVP oficial foca-se na estabilidade do Checkout, Pagamentos e Área de Membros. Ferramentas avançadas de marketing estarão disponíveis na próxima atualização.');
-                  return;
-                }
-                setActiveTab(tab.id as any);
-              }}
-              className={`px-4 py-2 rounded-xl transition-colors cursor-pointer shrink-0 ${
-                activeTab === tab.id
-                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 font-bold'
-                  : tab.isFake
-                  ? 'text-slate-600 hover:text-slate-500 bg-slate-950/50 line-through opacity-70'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-              title={tab.isFake ? "Em Breve" : ""}
-            >
-              {tab.label} {tab.isFake && ' 🔒'}
-            </button>
+            onClick={() => onNavigate('wallet')}
+            className="text-[11px] text-blue-400 hover:underline cursor-pointer inline-flex items-center gap-1"
+          >
+            Pedir Levantamento &rarr;
+          </button>
+        </div>
+
+        {/* Active Products */}
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-400">
+            <span>Produtos Cadastrados</span>
+            <Sparkles className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="text-2xl font-extrabold text-white font-mono">
+            {myProducts.length}
+          </div>
+          <div className="text-[11px] text-slate-400">
+            {myProducts.filter((p) => p.isPublished).length} Ativos no Marketplace
+          </div>
+        </div>
+      </div>
+
+      {/* Sub-tabs Navigation */}
+
+            <div className="flex gap-2 border-b border-slate-800 pb-1 text-xs font-semibold overflow-x-auto no-scrollbar">
+        {[
+          { id: 'products',       label: 'Catálogo de Produtos', isFake: false },
+          { id: 'support',        label: '💬 Chat de Suporte', isFake: false },
+          { id: 'rewards',        label: '🏆 Minhas Conquistas', isFake: true },
+          { id: 'funnel_builder', label: '💸 Upsell de 1-Clique', isFake: true },
+          { id: 'email',          label: '📧 Email Marketing', isFake: true },
+          { id: 'live',           label: '📺 Lives & Webinars', isFake: true },
+          { id: 'events',         label: '🎫 Eventos & Ingressos', isFake: true },
+          { id: 'abtesting',      label: '🧪 A/B Testing', isFake: true },
+          { id: 'utm',            label: '📊 UTM Attribution', isFake: true },
+          { id: 'funnel',         label: 'Funil de Vendas & LTV', isFake: true },
+          { id: 'heatmap',        label: '🔥 Heatmap de Vídeo', isFake: true },
+          { id: 'billing',        label: '🔄 Assinaturas', isFake: true },
+          { id: 'certificate',    label: '🎓 Editor de Certificado', isFake: true },
+          { id: 'coproduction',   label: 'Co-Produção & Splits', isFake: true },
+          { id: 'coupons',        label: 'Cupons & Promoções', isFake: true },
+          { id: 'abandoned',      label: 'Recuperador WhatsApp', isFake: true },
+          { id: 'pixels',         label: 'Pixels de Rastreamento', isFake: true },
+          { id: 'webhooks',       label: 'Webhooks & APIs', isFake: true },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              if (tab.isFake) {
+                alert('🚀 Funcionalidade em Breve! O MVP oficial foca-se na estabilidade do Checkout, Pagamentos e Área de Membros.');
+                return;
+              }
+              setActiveTab(tab.id as any);
+            }}
+            className={`px-4 py-2 rounded-xl transition-colors cursor-pointer shrink-0 ${
+              activeTab === tab.id
+                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 font-bold'
+                : tab.isFake
+                ? 'text-slate-600 hover:text-slate-500 bg-slate-950/50 line-through opacity-70'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+            }`}
+            title={tab.isFake ? "Em Breve" : ""}
+          >
+            {tab.label} {tab.isFake && ' 🔒'}
+          </button>
         ))}
       </div>
 

@@ -25,6 +25,7 @@ export interface PaymentInitiationResult {
   entityCode?: string;
   referenceNumber?: string;
   expressPhone?: string;
+  paymentUrl?: string;
   instructions?: string;
   qrCodeData?: string;
   expiresAt?: string;

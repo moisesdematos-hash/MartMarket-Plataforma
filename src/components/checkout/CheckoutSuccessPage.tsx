@@ -49,7 +49,7 @@ export const CheckoutSuccessPage: React.FC<CheckoutSuccessPageProps> = ({
   useEffect(() => {
     if (!order || orderStatus === 'completed') return;
 
-    let channel;
+    let channel: any;
     import('../../lib/supabase').then(({ supabase }) => {
       channel = supabase.channel(`order-status-${order.id}`)
         .on('postgres_changes', {
