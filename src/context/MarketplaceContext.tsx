@@ -1,4 +1,4 @@
-﻿// ==============================================================================
+// ==============================================================================
 // MARTMARKET MARKETPLACE & CORE DATA CONTEXT
 // ==============================================================================
 
@@ -111,7 +111,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
             shortDescription: dbProd.short_description,
             description: dbProd.short_description, // mock
             coverImage: dbProd.cover_image,
-            productType: dbProd.product_type,
+            productType: dbProd.type || 'course',
             creatorId: dbProd.creator_id,
             creatorName: 'Real Creator', // would need join
             creatorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator',
