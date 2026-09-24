@@ -188,12 +188,49 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           )}
 
           {/* Full Description */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold text-white tracking-tight">
-              Sobre este Produto
-            </h3>
-            <div className="prose prose-invert max-w-none text-xs sm:text-sm text-slate-300 leading-relaxed space-y-4">
-              <p>{product.description}</p>
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-white tracking-tight border-b border-slate-800 pb-2">
+                Sobre este Produto
+              </h3>
+              <div className="prose prose-invert max-w-none text-sm text-slate-300 leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
+                {product.description}
+              </div>
+            </div>
+
+            {/* O que inclui / Beneficios */}
+            <div className="space-y-4 bg-slate-900/50 p-6 rounded-3xl border border-slate-800/80">
+              <h3 className="text-lg font-bold text-white tracking-tight">
+                Principais Vantagens e Benefícios
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(product.features && product.features.length > 0 ? product.features : [
+                  'Acesso Imediato após aprovação',
+                  'Garantia Incondicional de 7 dias',
+                  'Suporte Direto com o Criador',
+                  'Atualizações Vitalícias'
+                ]).map((feature, idx) => (
+                  <div key={idx} className="flex items-center gap-2.5 text-xs text-slate-300">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <span className="font-medium">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Informacoes do Autor */}
+            <div className="flex items-center gap-5 p-6 rounded-3xl bg-slate-900 border border-slate-800">
+              <img
+                src={product.creatorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400'}
+                alt={product.creatorName}
+                className="w-16 h-16 rounded-full object-cover border-2 border-slate-700"
+              />
+              <div>
+                <h4 className="font-bold text-base text-white">{product.creatorName}</h4>
+                <p className="text-xs text-slate-400 mt-1">Especialista verificado e criador de conteúdos de alta qualidade na MartMarket. 100% de satisfação dos alunos.</p>
+              </div>
             </div>
           </div>
 
