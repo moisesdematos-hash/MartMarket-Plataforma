@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { useI18n } from '../../context/I18nContext';
+import { FileUploader } from '../common/FileUploader';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ProductType, SupportedCurrency } from '../../types';
@@ -695,16 +696,20 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                URL da Imagem de Capa
-              </label>
-              <input
-                type="text"
-                value={coverImage}
-                onChange={(e) => setCoverImage(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 font-mono focus:outline-none"
+            <div className="pt-2">
+              <FileUploader 
+                bucketName="public_assets"
+                folderPath="covers"
+                acceptedTypes="image/*"
+                label="Upload da Imagem de Capa (Recomendado 1280x720px)"
+                onUploadSuccess={(url) => setCoverImage(url)}
               />
+              
+              {coverImage && (
+                <div className="mt-4 w-full aspect-video rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
+                  <img src={coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
             </div>
           </div>
         )}
