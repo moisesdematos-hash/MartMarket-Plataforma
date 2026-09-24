@@ -44,6 +44,44 @@ export const CheckoutSuccessPage: React.FC<CheckoutSuccessPageProps> = ({
   const { showToast } = useNotification();
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
+  const [orderStatus, setOrderStatus] = useState(order?.status || 'completed');
+
+  useEffect(() => {
+    if (!order || orderStatus === 'completed') return;
+
+    let channel;
+    import('../../lib/supabase').then(({ supabase }) => {
+      channel = supabase.channel(`order-status-${order.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${order.id}`
+        }, (payload) => {
+          if (payload.new && payload.new.status) {
+            setOrderStatus(payload.new.status);
+            if (payload.new.status === 'completed') {
+              showToast('success', 'Pagamento confirmado! O seu acesso foi libertado!');
+              confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ['#3b82f6', '#10b981', '#f59e0b']
+              });
+            }
+          }
+        })
+        .subscribe();
+    });
+
+    return () => {
+      if (channel) {
+        import('../../lib/supabase').then(({ supabase }) => {
+          supabase.removeChannel(channel);
+        });
+      }
+    };
+  }, [order, orderStatus]);
 
   useEffect(() => {
     // Trigger festive celebratory confetti
@@ -72,7 +110,7 @@ export const CheckoutSuccessPage: React.FC<CheckoutSuccessPageProps> = ({
     );
   }
 
-  const isPendingMethod = order.paymentMethod === 'bank_reference' || order.paymentMethod === 'global_wire';
+  const isPendingMethod = orderStatus !== 'completed' && (order.paymentMethod === 'bank_reference' || order.paymentMethod === 'global_wire');
 
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
