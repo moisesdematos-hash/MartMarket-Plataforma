@@ -1,4 +1,4 @@
-﻿import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
   // Enable CORS for webhooks if needed
@@ -19,8 +19,7 @@ export default async function handler(req, res) {
     // SEC FIX: Webhook Authentication
     const webhookSecret = process.env.PROXYPAY_WEBHOOK_SECRET;
     const authHeader = req.headers.authorization || req.headers['x-proxypay-token'];
-    
-    if (webhookSecret && authHeader !== webhookSecret && authHeader !== \Bearer \\) {
+    if (webhookSecret && authHeader !== webhookSecret && authHeader !== \`Bearer \${webhookSecret}\`) {
       console.error('Tentativa de fraude bloqueada: Token invalido.');
       return res.status(401).json({ error: 'Unauthorized' });
     }
