@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // MARTMARKET 9-STEP PRODUCT CREATION WIZARD
 // ==============================================================================
 
@@ -104,11 +104,11 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
   const [modules, setModules] = useState([
     {
       id: 'mod-new-1',
-      title: 'Módulo 1: Introdução & Fundamentos',
+      title: 'MÃ³dulo 1: IntroduÃ§Ã£o & Fundamentos',
       lessons: [
         {
           id: 'les-new-1',
-          title: 'Aula 1: Apresentação e Primeiros Passos',
+          title: 'Aula 1: ApresentaÃ§Ã£o e Primeiros Passos',
           videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
           durationSeconds: 600,
           isFreePreview: true
@@ -146,7 +146,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
 
   const handleNext = () => {
     if (currentStep === 1 && (!title || !slug)) {
-      showToast('error', 'Por favor preencha o título e o identificador do produto.');
+      showToast('error', 'Por favor preencha o tÃ­tulo e o identificador do produto.');
       return;
     }
     if (currentStep < 9) {
@@ -157,7 +157,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
   const handlePublish = () => {
     // SECURITY & INTEGRITY VALIDATIONS (P1 Fix)
     if (!title || !slug) {
-      showToast('error', 'O Título e a URL (Slug) são obrigatórios.');
+      showToast('error', 'O TÃ­tulo e a URL (Slug) sÃ£o obrigatÃ³rios.');
       setCurrentStep(1);
       return;
     }
@@ -175,13 +175,13 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
     }
     
     if (defaultPrice < 100) {
-      showToast('error', 'O preço do produto não pode ser inferior a 100 ' + currency);
+      showToast('error', 'O preÃ§o do produto nÃ£o pode ser inferior a 100 ' + currency);
       setCurrentStep(4);
       return;
     }
     
     if (bumpEnabled && (!bumpTitle || !bumpPrice || bumpPrice <= 0)) {
-      showToast('error', 'A Oferta Extra (Bump) está ativa mas faltam dados obrigatórios no Passo 5.');
+      showToast('error', 'A Oferta Extra (Bump) estÃ¡ ativa mas faltam dados obrigatÃ³rios no Passo 5.');
       setCurrentStep(5);
       return;
     }
@@ -216,7 +216,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
       isSponsored: false,
       webhookUrl: productType === 'software' ? webhookUrl : undefined,
       downloadUrl: ['ebook', 'template'].includes(productType) ? downloadUrl : undefined,
-      features: ['Acesso vitalício', 'Certificado de Conclusão'],
+      features: ['Acesso vitalÃ­cio', 'Certificado de ConclusÃ£o'],
       course: productType === 'course' ? {
         id: `crs_${Date.now()}`,
         productId: '',
@@ -303,7 +303,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
       {/* Main Wizard Card */}
       <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-10 shadow-2xl space-y-6">
         
-        {/* STEP 1: INFORMAÇÕES BÁSICAS */}
+        {/* STEP 1: INFORMAÃ‡Ã•ES BÃSICAS */}
         {currentStep === 1 && (
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -328,7 +328,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
               </label>
               <input
                 type="text"
-                placeholder="Ex: Formação Completa em Inteligência Artificial para Negócios"
+                placeholder="Ex: FormaÃ§Ã£o Completa em InteligÃªncia Artificial para NegÃ³cios"
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-blue-500"
@@ -369,11 +369,11 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Descrição Curta (Resumo de Alto Impacto)
+                DescriÃ§Ã£o Curta (Resumo de Alto Impacto)
               </label>
               <textarea
                 rows={2}
-                placeholder="Explique em 2 frases qual o resultado transformador que o seu aluno ou cliente terá."
+                placeholder="Explique em 2 frases qual o resultado transformador que o seu aluno ou cliente terÃ¡."
                 value={shortDescription}
                 onChange={(e) => setShortDescription(e.target.value)}
                 className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-blue-500"
@@ -392,14 +392,14 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {[
-                { type: 'course' as ProductType, label: t('productTypeCourse'), desc: 'Aulas em vídeo, módulos estruturados e certificados', icon: Video },
+                { type: 'course' as ProductType, label: t('productTypeCourse'), desc: 'Aulas em vÃ­deo, mÃ³dulos estruturados e certificados', icon: Video },
                 { type: 'ebook' as ProductType, label: t('productTypeEbook'), desc: 'Livros digitais em formato PDF ou EPUB para download', icon: BookOpen },
-                { type: 'software' as ProductType, label: t('productTypeSoftware'), desc: 'Scripts, licenças e chaves de software', icon: Code2 },
-                { type: 'template' as ProductType, label: t('productTypeTemplate'), desc: 'Figma, Notion, modelos gráficos e planilhas', icon: Layers },
+                { type: 'software' as ProductType, label: t('productTypeSoftware'), desc: 'Scripts, licenÃ§as e chaves de software', icon: Code2 },
+                { type: 'template' as ProductType, label: t('productTypeTemplate'), desc: 'Figma, Notion, modelos grÃ¡ficos e planilhas', icon: Layers },
                 { type: 'community' as ProductType, label: t('productTypeCommunity'), desc: 'Acesso a comunidade privada e networking', icon: Users },
-                { type: 'audio' as ProductType, label: 'Áudios & Podcasts', desc: 'Séries de áudio e meditações guiadas', icon: Music },
-                { type: 'mentorship' as ProductType, label: 'Mentoria & Consultoria', desc: 'Sessões 1-a-1 e acompanhamento por videochamada', icon: Sparkles },
-                { type: 'service' as ProductType, label: 'Serviços Freelance', desc: 'Auditorias, Code Reviews, e serviços personalizados', icon: FileText },
+                { type: 'audio' as ProductType, label: 'Ãudios & Podcasts', desc: 'SÃ©ries de Ã¡udio e meditaÃ§Ãµes guiadas', icon: Music },
+                { type: 'mentorship' as ProductType, label: 'Mentoria & Consultoria', desc: 'SessÃµes 1-a-1 e acompanhamento por videochamada', icon: Sparkles },
+                { type: 'service' as ProductType, label: 'ServiÃ§os Freelance', desc: 'Auditorias, Code Reviews, e serviÃ§os personalizados', icon: FileText },
               ].map((item) => {
                 const Icon = item.icon;
                 const isSelected = productType === item.type;
@@ -432,7 +432,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
           <div className="space-y-4">
             <div>
               <h2 className="text-xl font-bold text-slate-100">{t('wizardStep3')}</h2>
-              <p className="text-xs text-slate-400">Configure os conteúdos, links de vídeo e materiais didáticos.</p>
+              <p className="text-xs text-slate-400">Configure os conteÃºdos, links de vÃ­deo e materiais didÃ¡ticos.</p>
             </div>
 
             {productType === 'course' ? (
@@ -467,7 +467,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
                           />
                           <input
                             type="text"
-                            placeholder="URL do Vídeo (MP4/HLS)"
+                            placeholder="URL do VÃ­deo (MP4/HLS)"
                             value={les.videoUrl}
                             onChange={(e) => {
                               const updated = [...modules];
@@ -487,7 +487,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
                 <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                   <Webhook className="w-6 h-6 text-blue-400" />
                   <div>
-                    <h3 className="text-sm font-bold text-slate-100">Integração SaaS (Webhook)</h3>
+                    <h3 className="text-sm font-bold text-slate-100">IntegraÃ§Ã£o SaaS (Webhook)</h3>
                     <p className="text-[11px] text-slate-400">Enviaremos um sinal POST para esta URL quando houver um pagamento aprovado.</p>
                   </div>
                 </div>
@@ -509,33 +509,38 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
                 <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                   <FileText className="w-6 h-6 text-blue-400" />
                   <div>
-                    <h3 className="text-sm font-bold text-slate-100">Entrega de Ficheiro</h3>
-                    <p className="text-[11px] text-slate-400">Para o MVP, cole o link direto do Google Drive ou Dropbox para os clientes baixarem.</p>
+                    <h3 className="text-sm font-bold text-slate-100">Entrega de Ficheiro (E-book / Template)</h3>
+                    <p className="text-[11px] text-slate-400">Faça upload do seu material. Ele será armazenado num cofre seguro da Supabase (privado).</p>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Link Secreto de Download
+                  <label className="block text-xs font-semibold text-slate-300 mb-2">
+                    Upload do Ficheiro Final
                   </label>
-                  <input
-                    type="url"
-                    placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
-                    value={downloadUrl}
-                    onChange={(e) => setDownloadUrl(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                  <FileUploader
+                    bucketName="product_files"
+                    folderPath="ebooks"
+                    acceptedTypes=".pdf,.zip,.rar,.doc,.docx"
+                    maxSizeMB={50}
+                    onUploadSuccess={(path) => setDownloadUrl(path)}
                   />
+                  {downloadUrl && (
+                    <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl">
+                      <p className="text-xs text-blue-400 font-mono break-all flex items-center gap-2">
+                        <FileText className="w-4 h-4" /> Ficheiro carregado com sucesso.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
         )}
 
-        {/* STEP 4: PREÇO & MOEDA */}
+        {/* STEP 4: PREÃ‡O & MOEDA */}
         {currentStep === 4 && (
           <div className="space-y-4">
             <div>
               <h2 className="text-xl font-bold text-slate-100">{t('wizardStep4')}</h2>
-              <p className="text-xs text-slate-400">Defina o valor padrão de venda e a garantia.</p>
+              <p className="text-xs text-slate-400">Defina o valor padrÃ£o de venda e a garantia.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -571,14 +576,14 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Período de Garantia Incondicional
+                  PerÃ­odo de Garantia Incondicional
                 </label>
                 <select
                   value={refundDays}
                   onChange={(e) => setRefundDays(Number(e.target.value))}
                   className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
-                  <option value={7}>7 Dias (Padrão)</option>
+                  <option value={7}>7 Dias (PadrÃ£o)</option>
                   <option value={14}>14 Dias</option>
                   <option value={30}>30 Dias</option>
                 </select>
@@ -675,12 +680,12 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
           </div>
         )}
 
-        {/* STEP 7: PÁGINA DE VENDAS */}
+        {/* STEP 7: PÃGINA DE VENDAS */}
         {currentStep === 7 && (
           <div className="space-y-4">
             <div>
               <h2 className="text-xl font-bold text-slate-100">{t('wizardStep7')}</h2>
-              <p className="text-xs text-slate-400">Adicione a descrição longa e imagens de capa.</p>
+              <p className="text-xs text-slate-400">Adicione a descriÃ§Ã£o longa e imagens de capa.</p>
             </div>
 
             <div>
@@ -689,7 +694,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
               </label>
               <textarea
                 rows={5}
-                placeholder="Descreva detalhadamente o que o aluno irá aprender, benefícios, para quem é indicado e metodologia."
+                placeholder="Descreva detalhadamente o que o aluno irÃ¡ aprender, benefÃ­cios, para quem Ã© indicado e metodologia."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-blue-500"
@@ -714,17 +719,17 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
           </div>
         )}
 
-        {/* STEP 8: REVISÃO */}
+        {/* STEP 8: REVISÃƒO */}
         {currentStep === 8 && (
           <div className="space-y-4">
             <div>
               <h2 className="text-xl font-bold text-slate-100">{t('wizardStep8')}</h2>
-              <p className="text-xs text-slate-400">Verifique os dados antes da publicação oficial.</p>
+              <p className="text-xs text-slate-400">Verifique os dados antes da publicaÃ§Ã£o oficial.</p>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 text-xs">
               <div className="flex justify-between border-b border-slate-800/80 pb-2">
-                <span className="text-slate-400">Título:</span>
+                <span className="text-slate-400">TÃ­tulo:</span>
                 <span className="font-bold text-slate-100">{title}</span>
               </div>
               <div className="flex justify-between border-b border-slate-800/80 pb-2">
@@ -732,18 +737,18 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
                 <span className="font-mono uppercase text-blue-400">{productType}</span>
               </div>
               <div className="flex justify-between border-b border-slate-800/80 pb-2">
-                <span className="text-slate-400">Preço:</span>
+                <span className="text-slate-400">PreÃ§o:</span>
                 <span className="font-mono font-bold text-emerald-400">{formatMoney(defaultPrice, currency)}</span>
               </div>
               <div className="flex justify-between border-b border-slate-800/80 pb-2">
-                <span className="text-slate-400">Comissão de Afiliados:</span>
+                <span className="text-slate-400">ComissÃ£o de Afiliados:</span>
                 <span className="font-mono">{affiliateEnabled ? `${affiliateCommissionRate}%` : 'Desativado'}</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* STEP 9: PUBLICAÇÃO */}
+        {/* STEP 9: PUBLICAÃ‡ÃƒO */}
         {currentStep === 9 && (
           <div className="text-center py-6 space-y-4">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -751,7 +756,7 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
             </div>
             <h2 className="text-2xl font-extrabold text-white tracking-tight">Tudo Pronto para Publicar!</h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto">
-              O seu produto ficará imediatamente visível no marketplace e o checkout próprio estará pronto para processar pagamentos.
+              O seu produto ficarÃ¡ imediatamente visÃ­vel no marketplace e o checkout prÃ³prio estarÃ¡ pronto para processar pagamentos.
             </p>
             <Button
               variant="primary"
@@ -795,8 +800,8 @@ export const ProductCreationWizard: React.FC<ProductCreationWizardProps> = ({ on
         onApplyCopy={(copyResult) => {
           setTitle(copyResult.headline);
           setShortDescription(copyResult.subheadline);
-          setDescription(`${copyResult.subheadline}\n\nO que você vai aprender:\n${copyResult.bulletPoints.map(b => `• ${b}`).join('\n')}\n\nPúblico-alvo:\n${copyResult.targetAudience}`);
-          showToast('success', 'Conteúdo da IA aplicado aos campos do produto!');
+          setDescription(`${copyResult.subheadline}\n\nO que vocÃª vai aprender:\n${copyResult.bulletPoints.map(b => `â€¢ ${b}`).join('\n')}\n\nPÃºblico-alvo:\n${copyResult.targetAudience}`);
+          showToast('success', 'ConteÃºdo da IA aplicado aos campos do produto!');
         }}
         onApplyCurriculum={(currModules) => {
           setModules(currModules.map((m, i) => ({
