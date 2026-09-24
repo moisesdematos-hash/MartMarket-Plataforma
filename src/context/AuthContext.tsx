@@ -103,43 +103,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password
       });
       
-      if (!error && data.user) {
-        // Fetch real profile from profiles table
-        const { data: profile } = await supabase
-          .from('profiles')
+      if (error) {
+        console.error('Login error:', error.message);
+        return false;
+      }
+
+      if (data.user) {
+        // Fetch real profile from user_profiles table
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
           .select('*')
           .eq('id', data.user.id)
           .single();
           
-        if (profile) {
-          setUser(profile as UserProfile);
-          setIsGuest(false);
-          return true;
+        if (profileError || !profile) {
+          console.error('Profile not found:', profileError);
+          return false;
         }
+
+        const mappedUser: UserProfile = {
+          id: profile.id,
+          email: profile.email,
+          fullName: profile.full_name,
+          avatarUrl: profile.avatar_url,
+          country: profile.country,
+          language: profile.language,
+          currency: profile.currency,
+          role: profile.role,
+          isVerified: profile.is_verified,
+          createdAt: profile.created_at
+        };
+        
+        setUser(mappedUser);
+        setIsGuest(false);
+        return true;
       }
-      
-      // Fallback gracefully for local dev / mock mode
-      let assignedRole: UserRole = 'CREATOR_AFFILIATE';
-      if (email.includes('admin')) assignedRole = 'SUPER_ADMIN';
-      else if (email.includes('affiliate')) assignedRole = 'AFFILIATE';
-      else if (email.includes('buyer')) assignedRole = 'BUYER';
-
-      const newUser: UserProfile = {
-        id: `usr_${Date.now()}`,
-        email,
-        fullName: email.split('@')[0].replace('.', ' ').toUpperCase(),
-        avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${email}`,
-        country: 'AO',
-        language: 'pt',
-        currency: 'AOA',
-        role: assignedRole,
-        isVerified: true,
-        createdAt: new Date().toISOString()
-      };
-
-      setUser(newUser);
-      setIsGuest(false);
-      return true;
+      return false;
+    } catch (err: any) {
+      console.error('Catch Login:', err);
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -188,27 +190,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
 
-      if (!error && data.user) {
-        // Trigger handle_new_user will create the profile. We can mock it here for fast UI.
+      if (error) {
+        console.error('Register error:', error.message);
+        return false;
       }
 
-      // Mock Fallback
-      const newUser: UserProfile = {
-        id: `usr_${Date.now()}`,
-        email,
-        fullName,
-        avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}`,
-        country: 'AO',
-        language: 'pt',
-        currency: 'AOA',
-        role,
-        isVerified: true,
-        createdAt: new Date().toISOString()
-      };
-
-      setUser(newUser);
-      setIsGuest(false);
-      return true;
+      if (data.user) {
+        // onAuthStateChange will trigger checkSession and fetch the profile
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Catch Register:', err);
+      return false;
     } finally {
       setIsLoading(false);
     }

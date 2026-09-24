@@ -514,7 +514,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Checkout & Order creation with full ledger & commission execution
-  const createAndProcessOrder = async (
+    const createAndProcessOrder = async (
     product: Product,
     buyer: { name: string; email: string; phone?: string; country: string },
     paymentMethod: string,
@@ -523,18 +523,23 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     affiliateId?: string
   ): Promise<{ order: Order; paymentResult: PaymentInitiationResult }> => {
     
-    // SEC FIX (P0): Price Tampering Defense (Never trust client-side product object)
     const { data: realProduct, error: fetchError } = await supabase
       .from('products')
-      .select('default_price') // bump_price could be added to schema later, using default for now
+      .select('default_price') 
       .eq('id', product.id)
       .single();
       
     if (fetchError || !realProduct) {
-      throw new Error('Falha de SeguranÃƒÂ§a: Produto invÃƒÂ¡lido ou preÃƒÂ§o manipulado.');
+      throw new Error('Falha de Seguranca: Produto invalido ou preco manipulado.');
     }
     
-    // Override potentially spoofed prices with the authoritative DB prices
+    // Get the authenticated buyer
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData?.user) {
+      throw new Error('Autenticacao necessaria para concluir a compra.');
+    }
+    const buyerId = authData.user.id;
+
     const secureProduct = {
       ...product,
       defaultPrice: realProduct.default_price
@@ -572,61 +577,35 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       couponCode: coupon?.code,
       bumpAdded: includeBump,
       paymentMethod,
-      status: 'completed',
-      
+      status: 'pending',
       createdAt: new Date().toISOString()
     };
 
-    // Process through Payment Provider
     const paymentResult = await PaymentEngine.processPayment(newOrder, paymentMethod, {
       expressPhone: buyer.phone
     });
 
-    // If order confirmed, update balances, ledger and product stats
-    setOrders((prev) => [newOrder, ...prev]);
-
-    // Update product sales counter
-    setProducts((prev) =>
-      prev.map((p) => (p.id === product.id ? { ...p, totalSales: p.totalSales + 1 } : p))
-    );
-
-    // Update Creator Wallet & Ledger
-    const newBalance = wallet.availableBalance + priceCalculation.creatorNet;
-    setWallet((prev) => ({
-      ...prev,
-      availableBalance: newBalance,
-      updatedAt: new Date().toISOString()
-    }));
-
-    const newLedgerEntry: LedgerEntry = {
-      id: `ledg_${Date.now()}`,
-      userId: product.creatorId,
-      orderId: newOrder.id,
-      type: 'creator_revenue',
-      amount: priceCalculation.creatorNet,
+    const { data: dbOrder, error: dbError } = await supabase.from('orders').insert([{
+      product_id: product.id,
+      buyer_id: buyerId,
+      creator_id: product.creatorId,
+      affiliate_id: affiliateId || null,
+      amount_total: priceCalculation.total,
       currency: product.currency,
-      balanceAfter: newBalance,
-      description: `Venda de ${product.title} (Ordem #${orderNumber})`,
-      referenceId: orderNumber,
-      createdAt: new Date().toISOString()
-    };
+      creator_net: priceCalculation.creatorNet,
+      platform_fee: priceCalculation.platformFee,
+      affiliate_commission: priceCalculation.affiliateFee,
+      status: 'pending',
+      payment_method: paymentMethod
+    }]).select('id').single();
 
-    setLedger((prev) => [newLedgerEntry, ...prev]);
-
-    // If affiliate was involved, credit affiliate commission
-    if (affiliateId && priceCalculation.affiliateFee > 0) {
-      setAffiliateLinks((prev) =>
-        prev.map((l) =>
-          l.affiliateId === affiliateId && l.productId === product.id
-            ? {
-                ...l,
-                conversionsCount: l.conversionsCount + 1,
-                totalCommission: l.totalCommission + priceCalculation.affiliateFee
-              }
-            : l
-        )
-      );
+    if (dbError) {
+      console.error('Database Order Insert Error:', dbError);
+      throw new Error('Falha ao registar a encomenda na base de dados.');
     }
+
+    newOrder.id = dbOrder.id;
+    setOrders((prev) => [newOrder, ...prev]);
 
     return { order: newOrder, paymentResult };
   };

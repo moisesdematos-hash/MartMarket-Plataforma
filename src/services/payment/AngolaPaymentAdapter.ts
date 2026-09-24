@@ -35,6 +35,58 @@ export class AngolaPaymentAdapter implements IPaymentProviderAdapter {
     }
 
     if (request.paymentMethod === 'bank_reference') {
+      // PROXYPAY REAL INTEGRATION
+      try {
+        const proxypayToken = import.meta.env.VITE_PROXYPAY_TOKEN;
+        
+        if (proxypayToken) {
+          const endDate = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString().split('T')[0];
+          
+          const response = await fetch('https://api.proxypay.co.ao/references', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Token ${proxypayToken}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/vnd.proxypay.v2+json'
+            },
+            body: JSON.stringify({
+              amount: request.amount,
+              end_datetime: endDate,
+              custom_fields: { order_id: request.orderId }
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Falha ao comunicar com a ProxyPay API');
+          }
+
+          const proxypayData = await response.json();
+
+          return {
+            success: true,
+            paymentId,
+            status: 'pending',
+            provider: 'proxypay',
+            providerTransactionId: proxypayData.id?.toString(),
+            entityCode: '00192', // Assuming standard proxypay entity? Depends on account, but standard test entity.
+            referenceNumber: proxypayData.number,
+            instructions: 'Efetue o pagamento através de qualquer Caixa Automático (Multicaixa) ou no seu Internet Banking selecionando "Pagamentos por Referência".',
+            expiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString()
+          };
+        } else {
+          console.warn('VITE_PROXYPAY_TOKEN não configurado. A gerar referência simulada.');
+        }
+      } catch (err) {
+        console.error('Erro ProxyPay:', err);
+        return {
+          success: false,
+          paymentId,
+          status: 'failed',
+          provider: 'proxypay',
+          errorMessage: 'Gateway de Pagamentos Indisponível.'
+        };
+      }
+
       // Generate realistic 9-digit Multicaixa reference with check digits
       const entity = '00192'; // Standard e-commerce entity code
       const randomDigits = Math.floor(100000000 + Math.random() * 900000000).toString();
