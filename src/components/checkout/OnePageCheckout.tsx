@@ -407,32 +407,7 @@ export const OnePageCheckout: React.FC<OnePageCheckoutProps> = ({
                   </div>
                 </label>
 
-                {/* International Card */}
-                <label
-                  className={`flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${
-                    selectedPaymentMethod === 'global_card'
-                      ? 'bg-blue-600/15 border-blue-500 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment_method"
-                    value="global_card"
-                    checked={selectedPaymentMethod === 'global_card'}
-                    onChange={() => setSelectedPaymentMethod('global_card')}
-                    className="mt-1 accent-blue-500"
-                  />
-                  <div className="flex-1">
-                    <span className="font-bold text-xs text-slate-100 flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-purple-400" />
-                      {t('globalCard')}
-                    </span>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Visa, Mastercard ou cartões internacionais autorizados.
-                    </p>
-                  </div>
-                </label>
+                
               </div>
             </div>
 
