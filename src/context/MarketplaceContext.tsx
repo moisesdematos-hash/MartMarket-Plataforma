@@ -360,7 +360,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const addProduct = (productData: Omit<Product, 'id' | 'totalSales' | 'rating' | 'reviewCount' | 'createdAt'>): Product => {
     const newProduct: Product = {
       ...productData,
-      id: `prod_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      id: crypto.randomUUID(),
       totalSales: 0,
       rating: 5.0,
       reviewCount: 0,
