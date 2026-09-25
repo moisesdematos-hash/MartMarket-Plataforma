@@ -127,7 +127,7 @@ export const InvoiceReceiptModal: React.FC<InvoiceReceiptModalProps> = ({
                   <td className="p-3 font-semibold">
                     {order.productTitle}
                     <span className="block text-[10px] text-slate-500 font-normal">
-                      Licença de Acesso Vitalício • Tipo: {order.productType.toUpperCase()}
+                      Licença de Acesso Vitalício • Tipo: {(order.productType || "PRODUTO").toUpperCase()}
                     </span>
                   </td>
                   <td className="p-3 text-center">1</td>

@@ -189,7 +189,7 @@ export const MembersLibrary: React.FC<MembersLibraryProps> = ({ onNavigate }) =>
                     />
                     <div className="absolute top-3 left-3">
                       <Badge variant="primary" size="sm">
-                        {product.productType.toUpperCase()}
+                        {(product.productType || "PRODUTO").toUpperCase()}
                       </Badge>
                     </div>
                   </div>

@@ -98,7 +98,7 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
           />
           <div className="absolute top-3 left-3">
             <Badge variant="primary" size="sm">
-              {product.productType.toUpperCase()}
+              {(product.productType || 'PRODUTO').toUpperCase()}
             </Badge>
           </div>
           {product.bumpEnabled && !isPatrocinado && (

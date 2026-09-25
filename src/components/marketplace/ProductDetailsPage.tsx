@@ -6,7 +6,8 @@ import React, { useState } from 'react';
 import { 
   Star, 
   ShieldCheck, 
-  CheckCircle2, 
+  CheckCircle2,
+  Check, 
   PlayCircle, 
   FileText, 
   ArrowLeft, 
@@ -113,7 +114,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="primary" size="md">
-                {product.productType.toUpperCase()}
+                {(product.productType || "PRODUTO").toUpperCase()}
               </Badge>
               <Badge variant="neutral" size="md">
                 {product.categorySlug.toUpperCase()}

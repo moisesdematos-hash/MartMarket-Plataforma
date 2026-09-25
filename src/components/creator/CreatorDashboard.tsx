@@ -293,7 +293,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ onNavigate }
                     </td>
                     <td className="py-3.5 px-4">
                       <Badge variant="neutral" size="sm">
-                        {prod.productType.toUpperCase()}
+                        {(prod.productType || "PRODUTO").toUpperCase()}
                       </Badge>
                     </td>
                     <td className="py-3.5 px-4 font-mono font-bold text-slate-100">
