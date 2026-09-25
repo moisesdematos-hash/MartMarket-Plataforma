@@ -77,11 +77,22 @@ interface MarketplaceContextType {
 
 const MarketplaceContext = createContext<MarketplaceContextType | undefined>(undefined);
 
+
+const safeParse = (str: string | null, fallback: any) => {
+  if (!str) return fallback;
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    console.error("Failed to parse JSON from localStorage", e);
+    return fallback;
+  }
+};
+
 export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Products
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('martmarket_products');
-    let loaded = saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    let loaded = saved ? (safeParse(saved, null) || null) : INITIAL_PRODUCTS;
     loaded = loaded.map((p: Product) => 
       p.id === 'prod-react-fullstack' ? { ...p, isSponsored: true } : p
     );
@@ -224,7 +235,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Orders
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem('martmarket_orders');
-    if (saved) return JSON.parse(saved);
+    if (saved) return (safeParse(saved, null) || null);
     // Seed initial orders
     return [
       {
@@ -259,13 +270,13 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Coupons
   const [coupons, setCoupons] = useState<Coupon[]>(() => {
     const saved = localStorage.getItem('martmarket_coupons');
-    return saved ? JSON.parse(saved) : INITIAL_COUPONS;
+    return saved ? (safeParse(saved, null) || null) : INITIAL_COUPONS;
   });
 
   // Wallet
   const [wallet, setWallet] = useState<UserWallet>(() => {
     const saved = localStorage.getItem('martmarket_wallet');
-    return saved ? JSON.parse(saved) : {
+    return saved ? (safeParse(saved, null) || null) : {
       userId: 'usr-creator-1',
       availableBalance: 485000,
       pendingBalance: 75000,
@@ -278,7 +289,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Ledger History
   const [ledger, setLedger] = useState<LedgerEntry[]>(() => {
     const saved = localStorage.getItem('martmarket_ledger');
-    if (saved) return JSON.parse(saved);
+    if (saved) return (safeParse(saved, null) || null);
     return [
       {
         id: 'ledg-1',
@@ -309,13 +320,13 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Payout Methods
   const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>(() => {
     const saved = localStorage.getItem('martmarket_payout_methods');
-    return saved ? JSON.parse(saved) : INITIAL_PAYOUT_METHODS;
+    return saved ? (safeParse(saved, null) || null) : INITIAL_PAYOUT_METHODS;
   });
 
   // Withdrawals
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>(() => {
     const saved = localStorage.getItem('martmarket_withdrawals');
-    if (saved) return JSON.parse(saved);
+    if (saved) return (safeParse(saved, null) || null);
     return [
       {
         id: 'with-1',
@@ -337,7 +348,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Affiliate Links
   const [affiliateLinks, setAffiliateLinks] = useState<AffiliateLink[]>(() => {
     const saved = localStorage.getItem('martmarket_affiliate_links');
-    if (saved) return JSON.parse(saved);
+    if (saved) return (safeParse(saved, null) || null);
     return [
       {
         id: 'aff-lnk-1',
@@ -356,7 +367,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Reviews
   const [reviews, setReviews] = useState<ProductReview[]>(() => {
     const saved = localStorage.getItem('martmarket_reviews');
-    if (saved) return JSON.parse(saved);
+    if (saved) return (safeParse(saved, null) || null);
     return [
       {
         id: 'rev-1',
@@ -386,7 +397,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // LMS Lesson Progress
   const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>(() => {
     const saved = localStorage.getItem('martmarket_progress');
-    return saved ? JSON.parse(saved) : {};
+    return saved ? (safeParse(saved, null) || null) : {};
   });
 
   // Persistence effects

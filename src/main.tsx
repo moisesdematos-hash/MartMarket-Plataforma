@@ -31,6 +31,7 @@ if (!rootElement) {
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <I18nProvider>
@@ -44,5 +45,6 @@ ReactDOM.createRoot(rootElement).render(
         </I18nProvider>
       </ThemeProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );
