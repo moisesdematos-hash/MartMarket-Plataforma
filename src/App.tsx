@@ -37,7 +37,7 @@ const FallbackLoader = () => (
 );
 
 export function App() {
-  const { user, isAuthenticated, isGuest } = useAuth();
+  const { user, isAuthenticated, isGuest, isLoading } = useAuth();
   const { t } = useI18n();
 
   // Router State
@@ -106,7 +106,7 @@ export function App() {
 
       {/* Main Viewport Container */}
       <main className="flex-1">
-        {isOnboardingOpen ? (
+        {isLoading ? <FallbackLoader /> : isOnboardingOpen ? (
           <OnboardingWizard
             onComplete={(role) => {
               setIsOnboardingOpen(false);
