@@ -6,6 +6,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ThemeProvider } from './context/ThemeContext';
 import { I18nProvider } from './context/I18nContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -36,7 +37,7 @@ ReactDOM.createRoot(rootElement).render(
           <NotificationProvider>
             <AuthProvider>
               <MarketplaceProvider>
-                <App />
+                <ErrorBoundary><App /></ErrorBoundary>
               </MarketplaceProvider>
             </AuthProvider>
           </NotificationProvider>
