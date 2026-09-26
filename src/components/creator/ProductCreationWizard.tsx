@@ -3,7 +3,7 @@
 // ==============================================================================
 
 import React, { useState, useEffect } from 'react';
-import { Globe, 
+import { BarChart, Globe, 
   ArrowLeft, 
   ArrowRight, 
   Check, 

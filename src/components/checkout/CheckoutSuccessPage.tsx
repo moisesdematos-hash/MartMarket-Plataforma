@@ -22,6 +22,8 @@ import {
 import { Order } from '../../types';
 import { PaymentInitiationResult } from '../../services/payment/PaymentProvider';
 import { useI18n } from '../../context/I18nContext';
+import { useMarketplace } from '../../context/MarketplaceContext';
+import { PixelTracker } from '../common/PixelTracker';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 import { Modal } from '../common/Modal';
@@ -41,6 +43,7 @@ export const CheckoutSuccessPage: React.FC<CheckoutSuccessPageProps> = ({
   onNavigate
 }) => {
   const { t, formatMoney } = useI18n();
+  const { products } = useMarketplace();
   const { showToast } = useNotification();
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
@@ -112,8 +115,21 @@ export const CheckoutSuccessPage: React.FC<CheckoutSuccessPageProps> = ({
 
   const isPendingMethod = orderStatus !== 'completed' && (order.paymentMethod === 'bank_reference' || order.paymentMethod === 'global_wire' || order.paymentMethod === 'paypay_angola');
 
+  
+  const product = products.find(p => p.id === order.productId);
+
   return (
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      {product && (
+        <PixelTracker 
+          fbPixelId={product.fbPixelId} 
+          gaPixelId={product.gaPixelId} 
+          event="Purchase" 
+          value={order.total} 
+          currency={order.currency} 
+        />
+      )}
+
       <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-10 shadow-2xl space-y-8">
         
         {/* Header Success State */}

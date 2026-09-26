@@ -25,6 +25,7 @@ import { Globe,
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
+import { PixelTracker } from '../common/PixelTracker';
 import { useNotification } from '../../context/NotificationContext';
 import { PaymentEngine } from '../../services/payment/PaymentEngine';
 import { Button } from '../common/Button';

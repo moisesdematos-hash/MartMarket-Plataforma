@@ -162,6 +162,8 @@ export interface Product {
   // Affiliate configuration
   affiliateEnabled: boolean;
   pppEnabled?: boolean;
+  fbPixelId?: string;
+  gaPixelId?: string;
   affiliateCommissionRate: number; // e.g. 40 (%)
   affiliateApprovalType: 'instant' | 'manual';
   isSponsored?: boolean;
