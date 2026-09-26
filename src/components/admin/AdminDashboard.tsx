@@ -85,7 +85,7 @@ export const AdminDashboard: React.FC = () => {
 
   const { showToast } = useNotification();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'products' | 'withdrawals' | 'audit' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'products' | 'withdrawals' | 'refunds' | 'audit' | 'settings'>('overview');
   
   
   const [users, setUsers] = React.useState<any[]>([]);
@@ -123,6 +123,32 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const [realWithdrawals, setRealWithdrawals] = React.useState<any[]>([]);
+
+  const [refunds, setRefunds] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchRefunds = async () => {
+      // Assuming a join with orders and user_profiles, but for simplicity we fetch raw and map
+      const { data, error } = await supabase.from('refund_requests').select('*, orders(product_id, buyer_id), user_profiles(full_name, email)');
+      if (!error && data) {
+        setRefunds(data);
+      }
+    };
+    if (activeTab === 'refunds') {
+      fetchRefunds();
+    }
+  }, [activeTab]);
+
+  const handleProcessRefund = async (refundId: string, newStatus: string) => {
+    const { error } = await supabase.from('refund_requests').update({ status: newStatus }).eq('id', refundId);
+    if (!error) {
+      setRefunds(prev => prev.map(r => r.id === refundId ? { ...r, status: newStatus } : r));
+      showToast(newStatus === 'APPROVED' ? 'success' : 'warning', `Reembolso ${newStatus === 'APPROVED' ? 'aprovado' : 'rejeitado'}.`);
+    } else {
+      showToast('error', 'Erro ao processar disputa.');
+    }
+  };
+
 
   React.useEffect(() => {
     import('../../lib/supabase').then(({ supabase }) => {
@@ -531,6 +557,61 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
+
+      
+      {/* TAB: REFUNDS */}
+      {activeTab === 'refunds' && (
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-rose-400" />
+              Centro de Resolução (Disputas e Reembolsos)
+            </h3>
+          </div>
+          
+          {refunds.length === 0 ? (
+            <div className="text-center py-10 text-slate-500">
+              Não existem disputas pendentes no momento.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {refunds.map((r) => (
+                <div key={r.id} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-100">{r.user_profiles?.full_name || 'Cliente'}</span>
+                      <span className="text-xs text-slate-500">({r.user_profiles?.email || 'N/A'})</span>
+                    </div>
+                    <div className="text-sm text-slate-300">
+                      <strong>Motivo:</strong> {r.reason}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      ID da Compra: {r.order_id} | Data do Pedido: {new Date(r.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0">
+                    <Badge variant={r.status === 'APPROVED' ? 'success' : r.status === 'REJECTED' ? 'danger' : 'warning'} size="sm">
+                      {r.status || 'PENDING'}
+                    </Badge>
+                    
+                    {r.status === 'PENDING' && (
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="danger" onClick={() => handleProcessRefund(r.id, 'APPROVED')}>
+                          Aprovar (Devolver)
+                        </Button>
+                        <Button size="sm" variant="secondary" onClick={() => handleProcessRefund(r.id, 'REJECTED')}>
+                          Rejeitar
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* TAB 5: SYSTEM & CURRENCY SETTINGS */}
       {activeTab === 'settings' && (
