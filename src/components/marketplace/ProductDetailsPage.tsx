@@ -438,7 +438,18 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               className="w-full text-base py-3.5 shadow-xl shadow-blue-500/25"
             >
               Comprar Agora &rarr;
-            </Button>
+              </Button>
+
+              {/* WHATSAPP CHECKOUT ENGINE */}
+              <Button 
+                onClick={handleWhatsAppBuy}
+                className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white border-none shadow-[0_0_20px_rgba(37,211,102,0.3)] mt-3"
+                size="lg"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Comprar rápido pelo WhatsApp
+              </Button>
+
 
             {/* Share link button */}
             <Button
