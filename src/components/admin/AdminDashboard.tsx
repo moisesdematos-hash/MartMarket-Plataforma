@@ -45,7 +45,9 @@ export const AdminDashboard: React.FC = () => {
     orders, 
     withdrawals, 
     approveWithdrawal, 
-    updateProduct 
+    updateProduct,
+    platformSettings,
+    updatePlatformSetting
   } = useMarketplace();
   const { t, formatMoney, currency } = useI18n();
   const { showToast } = useNotification();
@@ -440,19 +442,47 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
+
       {/* TAB 5: SYSTEM & CURRENCY SETTINGS */}
       {activeTab === 'settings' && (
         <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-6 shadow-xl text-xs text-slate-300">
-          <h3 className="text-base font-bold text-slate-100">{t('systemSettings')}</h3>
+          <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+            <Settings className="w-5 h-5 text-indigo-400" />
+            Configurações do Sistema (Live Database)
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-              <label className="font-bold text-slate-200 block">Comissão Padrão da Plataforma (Take-Rate %)</label>
-              <input type="text" defaultValue="7.9%" className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-100 font-mono w-full" />
+              <label className="font-bold text-slate-200 block">Comissão Padrão da Plataforma (%)</label>
+              <div className="flex gap-2">
+                <input 
+                  type="number" 
+                  step="0.1"
+                  value={platformSettings.takeRate} 
+                  onChange={(e) => updatePlatformSetting('takeRate', parseFloat(e.target.value))}
+                  className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-100 font-mono w-full" 
+                />
+                <Button size="sm" variant="success" onClick={() => showToast('success', 'Taxa de Comissão guardada em tempo real na BD.')}>Guardar</Button>
+              </div>
             </div>
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-              <label className="font-bold text-slate-200 block">Taxa de Câmbio de Referência (1 USD = Kz)</label>
-              <input type="text" defaultValue="915.50 AOA" className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-100 font-mono w-full" />
+              <label className="font-bold text-slate-200 block">Taxa de Câmbio de Referência (1 USD = AOA)</label>
+              <div className="flex gap-2">
+                <input 
+                  type="number" 
+                  step="0.1"
+                  value={platformSettings.exchangeRateUsdAoa} 
+                  onChange={(e) => updatePlatformSetting('exchangeRateUsdAoa', parseFloat(e.target.value))}
+                  className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-100 font-mono w-full" 
+                />
+                <Button size="sm" variant="success" onClick={() => showToast('success', 'Taxa de Câmbio atualizada em tempo real na BD.')}>Guardar</Button>
+              </div>
             </div>
+          </div>
+          <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl text-blue-400 flex items-start gap-3 mt-4">
+            <AlertTriangle className="w-5 h-5 shrink-0" />
+            <p>
+              Qualquer alteração efetuada nestes campos é imediatamente guardada na tabela <code>platform_settings</code> no Supabase. Todos os checkouts ativos vão recalcular os preços instantaneamente com base nestes novos valores.
+            </p>
           </div>
         </div>
       )}

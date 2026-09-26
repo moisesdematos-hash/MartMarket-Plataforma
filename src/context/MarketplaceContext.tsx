@@ -28,6 +28,8 @@ import { PaymentEngine } from '../services/payment/PaymentEngine';
 import { PaymentInitiationResult } from '../services/payment/PaymentProvider';
 
 interface MarketplaceContextType {
+  platformSettings: { takeRate: number, exchangeRateUsdAoa: number };
+  updatePlatformSetting: (key: string, value: number) => Promise<void>;
   products: Product[];
   categories: ProductCategory[];
   orders: Order[];
@@ -89,6 +91,17 @@ const safeParse = (str: string | null, fallback: any) => {
 };
 
 export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
+  const [platformSettings, setPlatformSettings] = useState({
+    takeRate: 7.9,
+    exchangeRateUsdAoa: 915.50
+  });
+
+  const updatePlatformSetting = async (key: string, value: number) => {
+    setPlatformSettings(prev => ({ ...prev, [key]: value }));
+    await supabase.from('platform_settings').upsert({ key, value });
+  };
+
   // Products
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('martmarket_products');
@@ -162,7 +175,22 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     // Fetch ledger from Supabase if user is logged in
-    const fetchLedger = async () => {
+    
+      // Fetch platform settings
+      const fetchSettings = async () => {
+        const { data } = await supabase.from('platform_settings').select('*');
+        if (data) {
+          const newSettings: any = { ...platformSettings };
+          data.forEach(row => {
+            if (row.key === 'takeRate') newSettings.takeRate = row.value;
+            if (row.key === 'exchangeRateUsdAoa') newSettings.exchangeRateUsdAoa = row.value;
+          });
+          setPlatformSettings(newSettings);
+        }
+      };
+      fetchSettings();
+
+      const fetchLedger = async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) return;
       
@@ -796,6 +824,10 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   return (
     <MarketplaceContext.Provider
       value={{
+
+        platformSettings,
+        updatePlatformSetting,
+
         products,
         categories,
         orders,
