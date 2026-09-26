@@ -85,7 +85,7 @@ export const AdminDashboard: React.FC = () => {
 
   const { showToast } = useNotification();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'products' | 'withdrawals' | 'refunds' | 'audit' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'products' | 'withdrawals' | 'refunds' | 'tickets' | 'audit' | 'settings'>('overview');
   
   
   const [users, setUsers] = React.useState<any[]>([]);
@@ -123,6 +123,78 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const [realWithdrawals, setRealWithdrawals] = React.useState<any[]>([]);
+
+  
+  const [tickets, setTickets] = React.useState<any[]>([]);
+  const [selectedTicket, setSelectedTicket] = React.useState<any | null>(null);
+  const [ticketMessages, setTicketMessages] = React.useState<any[]>([]);
+  const [replyText, setReplyText] = React.useState('');
+
+  React.useEffect(() => {
+    const fetchTickets = async () => {
+      const { data } = await supabase
+        .from('support_tickets')
+        .select('*, user_profiles(full_name, email)')
+        .order('created_at', { ascending: false });
+      if (data) setTickets(data);
+    };
+    if (activeTab === 'tickets') fetchTickets();
+  }, [activeTab]);
+
+  const loadTicketMessages = async (ticket: any) => {
+    setSelectedTicket(ticket);
+    const { data } = await supabase
+      .from('support_messages')
+      .select('*')
+      .eq('ticket_id', ticket.id)
+      .order('created_at', { ascending: true });
+    if (data) setTicketMessages(data);
+  };
+
+  const handleReplyTicket = async () => {
+    if (!replyText.trim() || !selectedTicket) return;
+    
+    // Insert message
+    const { error } = await supabase.from('support_messages').insert([{
+      ticket_id: selectedTicket.id,
+      sender_id: user?.id,
+      message: replyText,
+      is_admin_reply: true
+    }]);
+
+    if (!error) {
+      // Update ticket status to IN_PROGRESS if it was OPEN
+      if (selectedTicket.status === 'OPEN') {
+        await supabase.from('support_tickets').update({ status: 'IN_PROGRESS' }).eq('id', selectedTicket.id);
+        setTickets(prev => prev.map(t => t.id === selectedTicket.id ? { ...t, status: 'IN_PROGRESS' } : t));
+        setSelectedTicket({ ...selectedTicket, status: 'IN_PROGRESS' });
+      }
+      
+      setTicketMessages(prev => [...prev, {
+        id: crypto.randomUUID(),
+        ticket_id: selectedTicket.id,
+        sender_id: user?.id,
+        message: replyText,
+        is_admin_reply: true,
+        created_at: new Date().toISOString()
+      }]);
+      setReplyText('');
+      showToast('success', 'Resposta enviada ao utilizador.');
+    } else {
+      showToast('error', 'Falha ao enviar resposta.');
+    }
+  };
+
+  const handleCloseTicket = async (id: string) => {
+    const { error } = await supabase.from('support_tickets').update({ status: 'RESOLVED' }).eq('id', id);
+    if (!error) {
+      setTickets(prev => prev.map(t => t.id === id ? { ...t, status: 'RESOLVED' } : t));
+      if (selectedTicket?.id === id) {
+        setSelectedTicket({ ...selectedTicket, status: 'RESOLVED' });
+      }
+      showToast('success', 'Ticket marcado como Resolvido.');
+    }
+  };
 
   const [refunds, setRefunds] = React.useState<any[]>([]);
 
@@ -559,6 +631,103 @@ export const AdminDashboard: React.FC = () => {
 
 
       
+      
+      {/* TAB: SUPPORT TICKETS */}
+      {activeTab === 'tickets' && (
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-xl h-[600px] flex flex-col md:flex-row gap-6">
+          
+          {/* TICKETS LIST */}
+          <div className="w-full md:w-1/3 flex flex-col gap-4 border-r border-slate-800/60 pr-0 md:pr-6 h-full overflow-y-auto">
+            <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-indigo-400" />
+              Tickets Abertos
+            </h3>
+            
+            {tickets.length === 0 ? (
+              <p className="text-xs text-slate-500">Sem tickets na base de dados.</p>
+            ) : (
+              <div className="space-y-2">
+                {tickets.map(t => (
+                  <div 
+                    key={t.id} 
+                    onClick={() => loadTicketMessages(t)}
+                    className={`p-3 rounded-xl border cursor-pointer transition-colors ${selectedTicket?.id === t.id ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-slate-950 border-slate-800 hover:bg-slate-800/50'}`}
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-bold text-slate-200 text-xs truncate max-w-[150px]">{t.subject}</span>
+                      <Badge variant={t.status === 'RESOLVED' ? 'success' : t.status === 'IN_PROGRESS' ? 'warning' : 'danger'} size="sm">
+                        {t.status}
+                      </Badge>
+                    </div>
+                    <div className="text-[10px] text-slate-400">
+                      De: {t.user_profiles?.full_name || 'Utilizador'}
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-1">
+                      {new Date(t.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* TICKET CHAT WINDOW */}
+          <div className="w-full md:w-2/3 flex flex-col h-full">
+            {!selectedTicket ? (
+              <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
+                Selecione um ticket para ver as mensagens.
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between pb-4 border-b border-slate-800/60 mb-4">
+                  <div>
+                    <h4 className="font-bold text-slate-100">{selectedTicket.subject}</h4>
+                    <p className="text-xs text-slate-400">Cliente: {selectedTicket.user_profiles?.full_name} ({selectedTicket.user_profiles?.email})</p>
+                  </div>
+                  {selectedTicket.status !== 'RESOLVED' && (
+                    <Button size="sm" variant="success" onClick={() => handleCloseTicket(selectedTicket.id)}>
+                      Marcar Resolvido
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+                  {ticketMessages.map(msg => (
+                    <div key={msg.id} className={`flex flex-col max-w-[80%] ${msg.is_admin_reply ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
+                      <span className="text-[10px] text-slate-500 mb-1">{msg.is_admin_reply ? 'Suporte (Você)' : 'Cliente'}</span>
+                      <div className={`p-3 rounded-2xl text-sm ${msg.is_admin_reply ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>
+                        {msg.message}
+                      </div>
+                      <span className="text-[9px] text-slate-500 mt-1">{new Date(msg.created_at).toLocaleTimeString()}</span>
+                    </div>
+                  ))}
+                  {ticketMessages.length === 0 && (
+                    <p className="text-center text-xs text-slate-500">Sem mensagens.</p>
+                  )}
+                </div>
+
+                {selectedTicket.status !== 'RESOLVED' && (
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={replyText}
+                      onChange={e => setReplyText(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleReplyTicket()}
+                      placeholder="Escreva a resposta ao cliente..."
+                      className="flex-1 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100"
+                    />
+                    <Button variant="primary" onClick={handleReplyTicket}>
+                      Enviar
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+        </div>
+      )}
+
       {/* TAB: REFUNDS */}
       {activeTab === 'refunds' && (
         <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
