@@ -23,13 +23,14 @@ import { useI18n } from '../../context/I18nContext';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../common/Button';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Badge } from '../common/Badge';
 
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   
   if (user?.role !== 'SUPER_ADMIN' && user?.role !== 'ADMIN') {
-    return (
+      return (
       <div className="max-w-7xl mx-auto py-24 px-4 text-center">
         <div className="w-20 h-20 mx-auto bg-rose-500/10 rounded-full flex items-center justify-center mb-6">
           <Shield className="w-10 h-10 text-rose-500" />
@@ -50,6 +51,38 @@ export const AdminDashboard: React.FC = () => {
     updatePlatformSetting
   } = useMarketplace();
   const { t, formatMoney, currency } = useI18n();
+
+  // Generate Chart Data
+  const revenueData = React.useMemo(() => {
+    const days: Record<string, { date: string, revenue: number, sales: number }> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+      days[dateStr] = { date: dateStr, revenue: 0, sales: 0 };
+    }
+
+    orders.forEach(o => {
+      const dateStr = new Date(o.createdAt).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+      if (days[dateStr]) {
+        days[dateStr].revenue += o.platformFee || 0;
+        days[dateStr].sales += 1;
+      }
+    });
+    return Object.values(days);
+  }, [orders]);
+
+  const topProductsData = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    orders.forEach(o => {
+      counts[o.productTitle] = (counts[o.productTitle] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([name, sales]) => ({ name: name.substring(0, 20) + (name.length > 20 ? '...' : ''), sales }))
+      .sort((a, b) => b.sales - a.sales)
+      .slice(0, 5);
+  }, [orders]);
+
   const { showToast } = useNotification();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'products' | 'withdrawals' | 'audit' | 'settings'>('overview');
@@ -276,57 +309,113 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 1: OVERVIEW */}
+            {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
-        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
-          <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-indigo-400" />
-            Últimas Transações Globais
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400">
-                  <th className="pb-3 px-4 font-semibold">Data</th>
-                  <th className="pb-3 px-4 font-semibold">Comprador</th>
-                  <th className="pb-3 px-4 font-semibold">Produto</th>
-                  <th className="pb-3 px-4 font-semibold">Método</th>
-                  <th className="pb-3 px-4 font-semibold">Take-rate</th>
-                  <th className="pb-3 px-4 font-semibold text-right">Total Liquidez</th>
-                  <th className="pb-3 px-4 font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {orders.map((o) => (
-                  <tr key={o.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3.5 px-4 text-slate-300">
-                      {new Date(o.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-slate-100">{o.buyerName}</div>
-                      <div className="text-[10px] text-slate-500">{o.buyerEmail}</div>
-                    </td>
-                    <td className="py-3.5 px-4 font-medium text-slate-200">
-                      {o.productTitle}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <Badge variant="neutral" size="sm">
-                        {(o.paymentMethod || "UNKNOWN").replace('_', ' ').toUpperCase()}
-                      </Badge>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-emerald-400">
-                      +{formatMoney(o.platformFee, o.currency)}
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-100">
-                      {formatMoney(o.total, o.currency)}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <Badge variant="success" size="sm">PAGO</Badge>
-                    </td>
+        <div className="space-y-6">
+          {/* CHARTS ROW */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Revenue Chart */}
+            <div className="lg:col-span-2 rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-xl">
+              <h3 className="text-sm font-bold text-slate-100 mb-6 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                Receita da Plataforma (Últimos 7 Dias)
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenueData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                    <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}`} />
+                    <RechartsTooltip 
+                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', fontSize: '12px' }}
+                      itemStyle={{ color: '#10b981' }}
+                    />
+                    <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Top Products Chart */}
+            <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-xl">
+              <h3 className="text-sm font-bold text-slate-100 mb-6 flex items-center gap-2">
+                <Package className="w-4 h-4 text-blue-400" />
+                Top 5 Produtos (Vendas)
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topProductsData} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                    <XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} hide />
+                    <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} width={100} />
+                    <RechartsTooltip 
+                      cursor={{fill: '#1e293b'}}
+                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', fontSize: '12px' }}
+                    />
+                    <Bar dataKey="sales" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
+            <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-indigo-400" />
+              Últimas Transações Globais
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs whitespace-nowrap">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-400">
+                    <th className="pb-3 px-4 font-semibold">Data</th>
+                    <th className="pb-3 px-4 font-semibold">Comprador</th>
+                    <th className="pb-3 px-4 font-semibold">Produto</th>
+                    <th className="pb-3 px-4 font-semibold">Método</th>
+                    <th className="pb-3 px-4 font-semibold">Take-rate</th>
+                    <th className="pb-3 px-4 font-semibold text-right">Total Liquidez</th>
+                    <th className="pb-3 px-4 font-semibold">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {orders.map((o) => (
+                    <tr key={o.id} className="hover:bg-slate-800/30 transition-colors">
+                      <td className="py-3.5 px-4 text-slate-300">
+                        {new Date(o.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-semibold text-slate-100">{o.buyerName}</div>
+                        <div className="text-[10px] text-slate-500">{o.buyerEmail}</div>
+                      </td>
+                      <td className="py-3.5 px-4 font-medium text-slate-200">
+                        {o.productTitle}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <Badge variant="neutral" size="sm">
+                          {(o.paymentMethod || "UNKNOWN").replace('_', ' ').toUpperCase()}
+                        </Badge>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-emerald-400">
+                        +{formatMoney(o.platformFee, o.currency)}
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-100">
+                        {formatMoney(o.total, o.currency)}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <Badge variant="success" size="sm">PAGO</Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
