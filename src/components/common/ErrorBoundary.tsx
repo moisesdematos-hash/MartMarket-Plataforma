@@ -23,6 +23,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    
+    // Auto-recover from ChunkLoadErrors (Vercel deployments)
+    if (error.name === 'ChunkLoadError' || error.message.includes('Failed to fetch dynamically imported module')) {
+      if (!sessionStorage.getItem('chunk_reloaded')) {
+        sessionStorage.setItem('chunk_reloaded', 'true');
+        window.location.reload();
+        return;
+      }
+    }
+    
     this.setState({ errorInfo });
   }
 
