@@ -360,6 +360,7 @@ export const AdminDashboard: React.FC = () => {
                   <th className="py-3 px-4">Role</th>
                   <th className="py-3 px-4">País/Moeda</th>
                   <th className="py-3 px-4">KYC Status</th>
+                    <th className="py-3 px-4">Motor de Risco</th>
                   <th className="py-3 px-4 rounded-tr-xl text-right">Ações KYC / Role</th>
                 </tr>
               </thead>
@@ -382,8 +383,58 @@ export const AdminDashboard: React.FC = () => {
                       <Badge variant={u.kyc_status === 'APPROVED' ? 'success' : u.kyc_status === 'REJECTED' ? 'danger' : 'warning'} size="sm">
                         {u.kyc_status || 'NONE'}
                       </Badge>
-                    </td>
-                    <td className="py-3.5 px-4 flex justify-end gap-2">
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-500 w-12">Risco:</span>
+                            <select 
+                              className="bg-slate-900 border border-slate-700 text-[10px] rounded text-slate-200 p-0.5 outline-none"
+                              value={u.risk_level || 'MEDIUM'}
+                              onChange={async (e) => {
+                                const val = e.target.value;
+                                await supabase.from('user_profiles').update({ risk_level: val }).eq('id', u.id);
+                                setUsers(prev => prev.map(user => user.id === u.id ? { ...user, risk_level: val } : user));
+                              }}
+                            >
+                              <option value="LOW">BAIXO</option>
+                              <option value="MEDIUM">MÉDIO</option>
+                              <option value="HIGH">ALTO</option>
+                              <option value="BLOCKED">BLOQUEADO</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-500 w-12">Score:</span>
+                            <input 
+                              type="number" 
+                              className="bg-slate-900 border border-slate-700 text-[10px] rounded text-slate-200 p-0.5 w-12 text-center"
+                              defaultValue={u.trust_score || 50}
+                              onBlur={async (e) => {
+                                const val = parseInt(e.target.value);
+                                if (isNaN(val)) return;
+                                await supabase.from('user_profiles').update({ trust_score: val }).eq('id', u.id);
+                                setUsers(prev => prev.map(user => user.id === u.id ? { ...user, trust_score: val } : user));
+                              }}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-500 w-12">Retenção:</span>
+                            <input 
+                              type="number" 
+                              className="bg-slate-900 border border-slate-700 text-[10px] rounded text-slate-200 p-0.5 w-12 text-center"
+                              defaultValue={u.payout_delay_days || 7}
+                              onBlur={async (e) => {
+                                const val = parseInt(e.target.value);
+                                if (isNaN(val)) return;
+                                await supabase.from('user_profiles').update({ payout_delay_days: val }).eq('id', u.id);
+                                setUsers(prev => prev.map(user => user.id === u.id ? { ...user, payout_delay_days: val } : user));
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 flex justify-end gap-2">
                       {/* KYC Actions */}
                       {u.kyc_status !== 'APPROVED' && (
                         <Button size="sm" variant="success" onClick={() => handleUpdateUserKyc(u.id, 'APPROVED')}>
