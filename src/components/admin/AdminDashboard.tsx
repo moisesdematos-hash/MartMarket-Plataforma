@@ -134,7 +134,7 @@ export const AdminDashboard: React.FC = () => {
     const fetchTickets = async () => {
       const { data } = await supabase
         .from('support_tickets')
-        .select('*, user_profiles(full_name, email)')
+        .select('*, buyer:user_profiles!buyer_id(full_name, email)')
         .order('created_at', { ascending: false });
       if (data) setTickets(data);
     };
@@ -158,7 +158,7 @@ export const AdminDashboard: React.FC = () => {
     const { error } = await supabase.from('support_messages').insert([{
       ticket_id: selectedTicket.id,
       sender_id: user?.id,
-      message: replyText,
+      text: replyText,
       is_admin_reply: true
     }]);
 
@@ -174,7 +174,7 @@ export const AdminDashboard: React.FC = () => {
         id: crypto.randomUUID(),
         ticket_id: selectedTicket.id,
         sender_id: user?.id,
-        message: replyText,
+        text: replyText,
         is_admin_reply: true,
         created_at: new Date().toISOString()
       }]);
@@ -660,7 +660,7 @@ export const AdminDashboard: React.FC = () => {
                       </Badge>
                     </div>
                     <div className="text-[10px] text-slate-400">
-                      De: {t.user_profiles?.full_name || 'Utilizador'}
+                      De: {t.buyer?.full_name || 'Utilizador'}
                     </div>
                     <div className="text-[10px] text-slate-500 mt-1">
                       {new Date(t.created_at).toLocaleDateString()}
@@ -682,7 +682,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="flex items-center justify-between pb-4 border-b border-slate-800/60 mb-4">
                   <div>
                     <h4 className="font-bold text-slate-100">{selectedTicket.subject}</h4>
-                    <p className="text-xs text-slate-400">Cliente: {selectedTicket.user_profiles?.full_name} ({selectedTicket.user_profiles?.email})</p>
+                    <p className="text-xs text-slate-400">Cliente: {selectedTicket.buyer?.full_name} ({selectedTicket.buyer?.email})</p>
                   </div>
                   {selectedTicket.status !== 'RESOLVED' && (
                     <Button size="sm" variant="success" onClick={() => handleCloseTicket(selectedTicket.id)}>
@@ -696,7 +696,7 @@ export const AdminDashboard: React.FC = () => {
                     <div key={msg.id} className={`flex flex-col max-w-[80%] ${msg.is_admin_reply ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
                       <span className="text-[10px] text-slate-500 mb-1">{msg.is_admin_reply ? 'Suporte (Você)' : 'Cliente'}</span>
                       <div className={`p-3 rounded-2xl text-sm ${msg.is_admin_reply ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>
-                        {msg.message}
+                        {msg.text}
                       </div>
                       <span className="text-[9px] text-slate-500 mt-1">{new Date(msg.created_at).toLocaleTimeString()}</span>
                     </div>
