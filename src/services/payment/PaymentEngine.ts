@@ -31,9 +31,24 @@ export class PaymentEngine {
     product: Product,
     includeBump: boolean = false,
     coupon?: Coupon | null,
-    hasAffiliate: boolean = false
+    hasAffiliate: boolean = false,
+    buyerCountry: string = 'AO'
   ): PriceBreakdown {
-    const basePrice = Number(product.defaultPrice);
+    
+    let basePrice = Number(product.defaultPrice);
+    
+    // PPP Engine Logic
+    if (product.pppEnabled) {
+      if (buyerCountry === 'AO') {
+        basePrice = basePrice * 0.40; // 60% discount for Angola
+      } else if (buyerCountry === 'BR') {
+        basePrice = basePrice * 0.50; // 50% discount for Brazil
+      } else if (buyerCountry === 'PT') {
+        basePrice = basePrice * 0.80; // 20% discount for Portugal
+      }
+      // US and others pay 100%
+    }
+
     const bumpPrice = (includeBump && product.bumpEnabled && product.bumpPrice) ? Number(product.bumpPrice) : 0;
     const subtotal = basePrice + bumpPrice;
 

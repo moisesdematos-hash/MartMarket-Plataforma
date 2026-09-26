@@ -161,6 +161,7 @@ export interface Product {
   
   // Affiliate configuration
   affiliateEnabled: boolean;
+  pppEnabled?: boolean;
   affiliateCommissionRate: number; // e.g. 40 (%)
   affiliateApprovalType: 'instant' | 'manual';
   isSponsored?: boolean;
