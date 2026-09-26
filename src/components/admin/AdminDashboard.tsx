@@ -319,6 +319,7 @@ export const AdminDashboard: React.FC = () => {
       <div className="flex gap-2 border-b border-slate-800 overflow-x-auto pb-1 text-xs font-semibold">
         {[
           { id: 'overview', label: 'Visão Geral & Pedidos' },
+          { id: 'users', label: 'Utilizadores & KYC' },
           { id: 'products', label: 'Moderação de Conteúdos' },
           { id: 'withdrawals', label: 'Fila de Levantamentos' },
           { id: 'refunds', label: 'Disputas (Refunds)' },
