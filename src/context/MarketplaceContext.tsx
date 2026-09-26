@@ -28,8 +28,8 @@ import { PaymentEngine } from '../services/payment/PaymentEngine';
 import { PaymentInitiationResult } from '../services/payment/PaymentProvider';
 
 interface MarketplaceContextType {
-  platformSettings: { takeRate: number, exchangeRateUsdAoa: number };
-  updatePlatformSetting: (key: string, value: number) => Promise<void>;
+  platformSettings: { takeRate: number, exchangeRateUsdAoa: number, whatsappNumber?: string };
+  updatePlatformSetting: (key: string, value: number | string) => Promise<void>;
   products: Product[];
   categories: ProductCategory[];
   orders: Order[];
@@ -94,10 +94,11 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const [platformSettings, setPlatformSettings] = useState({
     takeRate: 7.9,
-    exchangeRateUsdAoa: 915.50
+    exchangeRateUsdAoa: 915.5,
+    whatsappNumber: "244923000000"
   });
 
-  const updatePlatformSetting = async (key: string, value: number) => {
+  const updatePlatformSetting = async (key: string, value: number | string) => {
     setPlatformSettings(prev => ({ ...prev, [key]: value }));
     await supabase.from('platform_settings').upsert({ key, value });
   };

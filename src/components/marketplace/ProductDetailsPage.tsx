@@ -3,7 +3,7 @@
 // ==============================================================================
 
 import React, { useState } from 'react';
-import { 
+import { MessageCircle, 
   Star, 
   ShieldCheck, 
   CheckCircle2,
@@ -38,7 +38,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   onNavigate,
   onOpenAuth
 }) => {
-  const { getProductBySlug, reviews, addReview } = useMarketplace();
+  const { getProductBySlug, reviews, addReview, platformSettings } = useMarketplace();
+
+
+  const handleWhatsAppBuy = () => {
+    const phone = platformSettings?.whatsappNumber || '244923000000';
+    const msg = encodeURIComponent(`Olá! Quero comprar o produto "${product?.title}" no valor de ${product?.defaultPrice} ${product?.currency}. Podem enviar-me a Referência Multicaixa?`);
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+  };
+
   const { t, formatMoney, currency } = useI18n();
   const { user, isAuthenticated, isGuest } = useAuth();
   const { showToast } = useNotification();
