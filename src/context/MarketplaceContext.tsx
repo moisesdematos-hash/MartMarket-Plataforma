@@ -92,7 +92,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Products
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('martmarket_products');
-    let loaded = saved ? (safeParse(saved, null) || null) : INITIAL_PRODUCTS;
+    let loaded = saved ? (safeParse(saved, null) || null) : [];
     loaded = loaded.map((p: Product) => 
       p.id === 'prod-react-fullstack' ? { ...p, isSponsored: true } : p
     );
@@ -113,7 +113,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const fetchRealProducts = async () => {
       try {
         const { data, error } = await supabase.from('products').select('*');
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           // Map snake_case from DB to camelCase for UI
           const mappedProducts = data.map(dbProd => ({
             id: dbProd.id,
