@@ -159,7 +159,7 @@ export const AdminDashboard: React.FC = () => {
       ticket_id: selectedTicket.id,
       sender_id: user?.id,
       text: replyText,
-      is_admin_reply: true
+      
     }]);
 
     if (!error) {
@@ -175,7 +175,7 @@ export const AdminDashboard: React.FC = () => {
         ticket_id: selectedTicket.id,
         sender_id: user?.id,
         text: replyText,
-        is_admin_reply: true,
+        
         created_at: new Date().toISOString()
       }]);
       setReplyText('');
@@ -321,6 +321,8 @@ export const AdminDashboard: React.FC = () => {
           { id: 'overview', label: 'Visão Geral & Pedidos' },
           { id: 'products', label: 'Moderação de Conteúdos' },
           { id: 'withdrawals', label: 'Fila de Levantamentos' },
+          { id: 'refunds', label: 'Disputas (Refunds)' },
+          { id: 'tickets', label: 'Suporte (Tickets)' },
           { id: 'audit', label: 'Auditoria & Logs' },
           { id: 'settings', label: 'Configurações de Taxas & Moedas' },
         ].map((tab) => (
@@ -693,9 +695,9 @@ export const AdminDashboard: React.FC = () => {
 
                 <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
                   {ticketMessages.map(msg => (
-                    <div key={msg.id} className={`flex flex-col max-w-[80%] ${msg.is_admin_reply ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
-                      <span className="text-[10px] text-slate-500 mb-1">{msg.is_admin_reply ? 'Suporte (Você)' : 'Cliente'}</span>
-                      <div className={`p-3 rounded-2xl text-sm ${msg.is_admin_reply ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>
+                    <div key={msg.id} className={`flex flex-col max-w-[80%] ${msg.sender_id === user?.id ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
+                      <span className="text-[10px] text-slate-500 mb-1">{msg.sender_id === user?.id ? 'Suporte (Você)' : 'Cliente'}</span>
+                      <div className={`p-3 rounded-2xl text-sm ${msg.sender_id === user?.id ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>
                         {msg.text}
                       </div>
                       <span className="text-[9px] text-slate-500 mt-1">{new Date(msg.created_at).toLocaleTimeString()}</span>
