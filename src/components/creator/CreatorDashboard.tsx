@@ -26,6 +26,7 @@ import { ShieldAlert,
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 import { AbandonedCartsManager } from './AbandonedCartsManager';
@@ -54,6 +55,18 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ onNavigate }
   const { products, orders, wallet, deleteProduct, updateProduct } = useMarketplace();
   const { t, formatMoney, currency } = useI18n();
   const { user } = useAuth();
+
+  
+  const [riskData, setRiskData] = React.useState<{ trust_score: number, risk_level: string, payout_delay_days: number } | null>(null);
+
+  React.useEffect(() => {
+    if (user?.id) {
+      supabase.from('user_profiles').select('trust_score, risk_level, payout_delay_days').eq('id', user.id).single()
+        .then(({ data }) => {
+          if (data) setRiskData(data);
+        });
+    }
+  }, [user]);
 
   const [activeTab, setActiveTab] = useState<'products' | 'abandoned' | 'pixels' | 'coproduction' | 'webhooks' | 'funnel' | 'coupons' | 'billing' | 'heatmap' | 'email' | 'utm' | 'live' | 'abtesting' | 'events' | 'certificate' | 'support' | 'funnel_builder' | 'rewards'>('products');
 
