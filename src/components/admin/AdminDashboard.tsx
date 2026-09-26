@@ -18,6 +18,7 @@ import {
   Search
 } from 'lucide-react';
 import { useMarketplace } from '../../context/MarketplaceContext';
+import { supabase } from '../../lib/supabase';
 import { useI18n } from '../../context/I18nContext';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -49,8 +50,43 @@ export const AdminDashboard: React.FC = () => {
   const { t, formatMoney, currency } = useI18n();
   const { showToast } = useNotification();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'withdrawals' | 'audit' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'products' | 'withdrawals' | 'audit' | 'settings'>('overview');
   
+  
+  const [users, setUsers] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchUsers = async () => {
+      const { data, error } = await supabase.from('user_profiles').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        setUsers(data);
+      }
+    };
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [activeTab]);
+
+  const handleUpdateUserKyc = async (userId: string, status: string) => {
+    const { error } = await supabase.from('user_profiles').update({ kyc_status: status }).eq('id', userId);
+    if (!error) {
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, kyc_status: status } : u));
+      showToast('success', 'Status KYC atualizado com sucesso.');
+    } else {
+      showToast('error', 'Erro ao atualizar KYC.');
+    }
+  };
+
+  const handleUpdateUserRole = async (userId: string, newRole: string) => {
+    const { error } = await supabase.from('user_profiles').update({ role: newRole }).eq('id', userId);
+    if (!error) {
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      showToast('success', 'Nível de permissão atualizado.');
+    } else {
+      showToast('error', 'Erro ao atualizar permissão.');
+    }
+  };
+
   const [realWithdrawals, setRealWithdrawals] = React.useState<any[]>([]);
 
   React.useEffect(() => {
@@ -169,6 +205,75 @@ export const AdminDashboard: React.FC = () => {
         ))}
       </div>
 
+      
+      {/* TAB: USERS & KYC */}
+      {activeTab === 'users' && (
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              <Users className="w-5 h-5 text-indigo-400" />
+              Gestão de Identidades (KYC)
+            </h3>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs whitespace-nowrap">
+              <thead className="bg-slate-950 text-slate-400 uppercase font-bold tracking-wider">
+                <tr>
+                  <th className="py-3 px-4 rounded-tl-xl">Utilizador</th>
+                  <th className="py-3 px-4">Role</th>
+                  <th className="py-3 px-4">País/Moeda</th>
+                  <th className="py-3 px-4">KYC Status</th>
+                  <th className="py-3 px-4 rounded-tr-xl text-right">Ações KYC / Role</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {users.map((u) => (
+                  <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div className="font-bold text-slate-100">{u.full_name}</div>
+                      <div className="text-[10px] text-slate-500">{u.email}</div>
+                    </td>
+                    <td className="py-3.5 px-4 font-mono">
+                      <Badge variant={u.role === 'SUPER_ADMIN' ? 'success' : 'neutral'} size="sm">
+                        {u.role || 'MEMBER'}
+                      </Badge>
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-400">
+                      {u.country || 'N/A'} / {u.currency || 'N/A'}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <Badge variant={u.kyc_status === 'APPROVED' ? 'success' : u.kyc_status === 'REJECTED' ? 'danger' : 'warning'} size="sm">
+                        {u.kyc_status || 'NONE'}
+                      </Badge>
+                    </td>
+                    <td className="py-3.5 px-4 flex justify-end gap-2">
+                      {/* KYC Actions */}
+                      {u.kyc_status !== 'APPROVED' && (
+                        <Button size="sm" variant="success" onClick={() => handleUpdateUserKyc(u.id, 'APPROVED')}>
+                          Aprovar KYC
+                        </Button>
+                      )}
+                      {u.kyc_status === 'PENDING' && (
+                        <Button size="sm" variant="danger" onClick={() => handleUpdateUserKyc(u.id, 'REJECTED')}>
+                          Rejeitar
+                        </Button>
+                      )}
+                      {/* Role Actions */}
+                      {u.role !== 'SUPER_ADMIN' && (
+                        <Button size="sm" variant="secondary" onClick={() => handleUpdateUserRole(u.id, 'SUPER_ADMIN')}>
+                          Tornar Admin
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
         <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-4 shadow-xl">
@@ -204,7 +309,7 @@ export const AdminDashboard: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4">
                       <Badge variant="neutral" size="sm">
-                        {o.paymentMethod.replace('_', ' ').toUpperCase()}
+                        {(o.paymentMethod || "UNKNOWN").replace('_', ' ').toUpperCase()}
                       </Badge>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-emerald-400">
@@ -293,7 +398,7 @@ export const AdminDashboard: React.FC = () => {
 
                   <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <Badge variant={w.status === 'paid' ? 'success' : 'warning'} size="sm">
-                      {w.status.toUpperCase()}
+                      {(w.status || "UNKNOWN").toUpperCase()}
                     </Badge>
                     {w.status === 'pending' && (
                       <Button

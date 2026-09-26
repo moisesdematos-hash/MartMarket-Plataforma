@@ -5,7 +5,7 @@
 // ==============================================================================
 
 import React, { useState } from 'react';
-import { 
+import { ShieldAlert, 
   Sparkles, 
   PlusCircle, 
   TrendingUp, 
@@ -390,7 +390,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ onNavigate }
                   {formatMoney(order.total, order.currency)}
                 </span>
                 <Badge variant="success" size="sm">
-                  {order.paymentMethod.replace('_', ' ').toUpperCase()}
+                  {(order.paymentMethod || "UNKNOWN").replace('_', ' ').toUpperCase()}
                 </Badge>
               </div>
             </div>

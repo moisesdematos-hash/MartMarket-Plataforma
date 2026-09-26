@@ -70,6 +70,8 @@ export type WithdrawalStatus =
 
 export interface UserProfile {
   id: string;
+  kycStatus?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  documentUrl?: string;
   email: string;
   fullName: string;
   avatarUrl?: string;
