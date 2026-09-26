@@ -50,7 +50,7 @@ export const DynamicWatermark: React.FC<DynamicWatermarkProps> = ({
     >
       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-black/40 backdrop-blur-[2px] border border-white/10 text-[10px] font-mono text-slate-300 shadow-sm tracking-wider">
         <Shield className="w-3 h-3 text-blue-400 opacity-60" />
-        <span>{studentName} • {studentEmail} • {studentIp} • {timestamp}</span>
+        <span>{studentName} &bull; {studentEmail} &bull; {studentIp} &bull; {timestamp}</span>
       </div>
     </div>
   );
