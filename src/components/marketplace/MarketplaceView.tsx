@@ -14,7 +14,8 @@ import {
   Briefcase, 
   Palette, 
   Megaphone,
-  Check
+  Check,
+  ShoppingBag
 } from 'lucide-react';
 import { useMarketplace } from '../../context/MarketplaceContext';
 import { useI18n } from '../../context/I18nContext';
@@ -181,7 +182,7 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
       </div>
 
       {/* View Mode Tabs */}
-      <div className="flex items-center gap-2 mb-8 border-b border-slate-800 pb-1">
+      <div className="hidden">
         <button
           onClick={() => setViewMode('catalog')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
@@ -205,12 +206,17 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
       </div>
 
       {/* Ranking View */}
-      {viewMode === 'ranking' && (
+      {true && (
         <MarketplaceRanking onNavigate={onNavigate} />
       )}
 
       {/* Catalog View */}
-      {viewMode === 'catalog' && (
+      {true && (
+      <div className="mt-16 pt-8 border-t border-slate-800">
+        <h2 className="text-2xl font-black text-white flex items-center gap-2 mb-8">
+          <ShoppingBag className="w-6 h-6 text-blue-400" />
+          Catálogo Completo
+        </h2>
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Left Sidebar Filters */}
@@ -370,7 +376,8 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onNavigate }) 
           )}
         </div>
       </div>
-      )} {/* end catalog view */}
+      </div>
+)} {/* end catalog view */}
     </div>
   );
 };
