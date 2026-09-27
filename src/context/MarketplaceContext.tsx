@@ -104,24 +104,10 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Products
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('martmarket_products');
-    let loaded = saved ? (safeParse(saved, null) || null) : [];
-    loaded = loaded.map((p: Product) => 
-      p.id === 'prod-react-fullstack' ? { ...p, isSponsored: true } : p
-    );
-    return loaded;
-  });
+  const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    // Initial sync of mock products (force sponsored flag)
-    setProducts(prev => {
-      const needsUpdate = prev.some(p => p.id === 'prod-react-fullstack' && !p.isSponsored);
-      if (needsUpdate) {
-        return prev.map(p => p.id === 'prod-react-fullstack' ? { ...p, isSponsored: true } : p);
-      }
-      return prev;
-    });
+    
 
     // Fetch real products from Supabase
     const fetchRealProducts = async () => {
@@ -159,12 +145,7 @@ export const MarketplaceProvider: React.FC<{ children: React.ReactNode }> = ({ c
             createdAt: dbProd.created_at,
           })) as unknown as Product[];
           
-          setProducts(prev => {
-            // merge supabase data with local mock data (for UI completeness)
-            const supabaseIds = new Set(mappedProducts.map(p => p.id));
-            const filteredLocal = prev.filter(p => !supabaseIds.has(p.id));
-            return [...mappedProducts, ...filteredLocal];
-          });
+          setProducts(mappedProducts);
         }
       } catch (err) {
         console.error('Error fetching from supabase:', err);
